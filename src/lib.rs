@@ -11,7 +11,7 @@ mod task;
 pub use self::{
     event::{Event, MessageEvent, ProgressEvent, ProgressEventKind},
     priority::PriorityLevel,
-    progress::ProgressId,
+    progress::{Observer, Progress, ProgressId, Reporter},
     report::Report,
     task::{Generation, Task},
 };
