@@ -4,9 +4,11 @@ use std::{
     collections::HashMap,
     sync::{
         atomic::{AtomicUsize, Ordering},
-        Arc, RwLock, Weak,
+        Arc, Weak,
     },
 };
+
+use parking_lot::RwLock;
 
 use crate::{
     event::Event, report::Report, task::Task, Generation, MessageEvent, PriorityLevel,
@@ -93,7 +95,7 @@ impl Progress {
     /// Returned are the progress itself, as well as a `Reporter`
     /// which is used on the receiving end of the channel for obtaining reports.
     pub fn new_with_parent(task: Task, parent: &Arc<Self>) -> Arc<Self> {
-        let parent_state = parent.state.read().unwrap();
+        let parent_state = parent.state.read();
 
         // Children share the observer of their parent:
         let observer = parent_state.observer.clone();
@@ -105,11 +107,10 @@ impl Progress {
         parent
             .relationships
             .write()
-            .unwrap()
             .children
             .insert(child.id(), Arc::clone(&child));
 
-        let parent_state = parent.state.read().unwrap();
+        let parent_state = parent.state.read();
 
         parent.emit_update_event(&*parent_state.observer);
 
@@ -146,16 +147,11 @@ impl Progress {
 
     /// Attaches `child` to `self`, returning the `child's` own and now no longer used `Observer`.
     pub fn attach_child(self: &Arc<Self>, child: &Arc<Self>) -> Arc<dyn Observer> {
-        let parent_state = self.state.read().unwrap();
+        let parent_state = self.state.read();
 
         let max_generation = {
             let parent_max_generation = parent_state.max_generation.load(Ordering::Relaxed);
-            let child_max_generation = child
-                .state
-                .read()
-                .unwrap()
-                .max_generation
-                .load(Ordering::Relaxed);
+            let child_max_generation = child.state.read().max_generation.load(Ordering::Relaxed);
             parent_max_generation.max(child_max_generation)
         };
 
@@ -165,21 +161,20 @@ impl Progress {
             .store(max_generation, Ordering::SeqCst);
 
         // Children share the generation of their parent:
-        child.state.write().unwrap().max_generation = Arc::clone(&parent_state.max_generation);
+        child.state.write().max_generation = Arc::clone(&parent_state.max_generation);
 
         // Make sure the child uses the parent's observer from now on:
         let observer = {
             let parent_observer = parent_state.observer.clone();
-            std::mem::replace(&mut child.state.write().unwrap().observer, parent_observer)
+            std::mem::replace(&mut child.state.write().observer, parent_observer)
         };
 
         self.relationships
             .write()
-            .unwrap()
             .children
             .insert(child.id(), Arc::clone(child));
 
-        let state = self.state.read().unwrap();
+        let state = self.state.read();
 
         self.emit_update_event(&*state.observer);
 
@@ -189,24 +184,16 @@ impl Progress {
     /// Detaches `child` from `self`, giving it a new `observer`.
     pub fn detach_child(self: &Arc<Self>, child: &Arc<Self>, observer: Arc<dyn Observer>) {
         debug_assert!(
-            self.relationships
-                .read()
-                .unwrap()
-                .children
-                .contains_key(&child.id),
+            self.relationships.read().children.contains_key(&child.id),
             "not a child"
         );
 
-        child.state.write().unwrap().observer = observer;
-        child.relationships.write().unwrap().parent = Weak::new();
+        child.state.write().observer = observer;
+        child.relationships.write().parent = Weak::new();
 
-        self.relationships
-            .write()
-            .unwrap()
-            .children
-            .remove(&child.id);
+        self.relationships.write().children.remove(&child.id);
 
-        let state = self.state.read().unwrap();
+        let state = self.state.read();
 
         self.emit_update_event(&*state.observer);
     }
@@ -285,7 +272,7 @@ impl Progress {
             return;
         }
 
-        let state = self.state.read().unwrap();
+        let state = self.state.read();
         self.emit_message_event(&*state.observer, message().into(), level);
     }
 
@@ -305,13 +292,12 @@ impl Progress {
     ///
     /// where `level` is one of `[trace, debug, info, warn, error]`.
     pub fn set_min_priority_level(&self, level: Option<PriorityLevel>) {
-        self.state.write().unwrap().min_priority_level = level;
+        self.state.write().min_priority_level = level;
     }
 
     fn min_priority_level(&self) -> PriorityLevel {
         self.state
             .read()
-            .unwrap()
             .min_priority_level
             .unwrap_or_else(|| PriorityLevel::from_env().unwrap_or_default())
     }
@@ -396,7 +382,7 @@ impl Progress {
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
     pub fn update(self: &Arc<Self>, update_task: impl FnOnce(&mut Task)) {
-        let guard = &mut self.state.write().unwrap();
+        let guard = &mut self.state.write();
 
         update_task(&mut guard.task);
 
@@ -435,7 +421,6 @@ impl Drop for Progress {
     fn drop(&mut self) {
         self.state
             .read()
-            .unwrap()
             .observer
             .observe(Event::Progress(ProgressEvent {
                 id: self.id(),
@@ -446,7 +431,7 @@ impl Drop for Progress {
 
 impl Reporter for Progress {
     fn report(&self) -> Report {
-        let task = &self.state.read().unwrap().task;
+        let task = &self.state.read().task;
 
         let progress_id = self.id;
         let label = task.label.clone();
@@ -455,7 +440,6 @@ impl Reporter for Progress {
         let subreports: Vec<_> = self
             .relationships
             .read()
-            .unwrap()
             .children
             .values()
             .map(|progress| progress.report())
