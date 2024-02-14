@@ -2,6 +2,10 @@
 
 //! Frontend-agnostic progress reporting.
 
+mod progress;
 mod task;
 
-pub use self::task::{Generation, Task};
+pub use self::{
+    progress::ProgressId,
+    task::{Generation, Task},
+};
