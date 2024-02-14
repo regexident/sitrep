@@ -20,6 +20,9 @@ parking_lot = "0.12.1"
 [dev-dependencies]
 criterion = "0.3"
 
+[features]
+deadlocks-debugger = ["parking_lot/deadlock_detection"]
+
 [[bench]]
 name = "criterion"
 harness = false
