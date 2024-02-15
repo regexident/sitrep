@@ -507,19 +507,4 @@ impl Reporter for Progress {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn is_auto_incrementing() {
-        let ids: Vec<_> = (0..100).map(|_| ProgressId::new_unique()).collect();
-
-        for window in ids.windows(2) {
-            let [prev, next] = window else {
-                panic!("expected window of size 2");
-            };
-
-            assert_eq!(prev.0 + 1, next.0);
-        }
-    }
-}
+mod tests;
