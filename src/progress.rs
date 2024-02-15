@@ -354,7 +354,7 @@ impl Progress {
     /// When making multiple changes prefer to use the `update(…)` method over multiple
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
-    pub fn increment_completed_by(self: &Arc<Self>, increment: u32) {
+    pub fn increment_completed_by(self: &Arc<Self>, increment: usize) {
         self.update(|task| task.increment_completed_by(increment));
     }
 
@@ -365,7 +365,7 @@ impl Progress {
     /// When making multiple changes prefer to use the `update(…)` method over multiple
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
-    pub fn set_completed(self: &Arc<Self>, completed: u32) {
+    pub fn set_completed(self: &Arc<Self>, completed: usize) {
         self.update(|task| task.set_completed(completed));
     }
 
@@ -378,7 +378,7 @@ impl Progress {
     /// When making multiple changes prefer to use the `update(…)` method over multiple
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
-    pub fn set_total(self: &Arc<Self>, total: u32) {
+    pub fn set_total(self: &Arc<Self>, total: usize) {
         self.update(|task| task.set_total(total));
     }
 

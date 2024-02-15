@@ -10,8 +10,8 @@ pub struct Generation(pub(crate) usize);
 #[derive(Clone, PartialEq, Debug)]
 pub struct Task {
     pub(crate) label: Option<String>,
-    pub(crate) completed: u32,
-    pub(crate) total: u32,
+    pub(crate) completed: usize,
+    pub(crate) total: usize,
     pub(crate) weight: f32,
     pub(crate) generation: Generation,
 }
@@ -28,7 +28,7 @@ impl Task {
     /// Builder-style method for setting the task's initial completed unit count.
     ///
     /// The default completed unit count is `0`.
-    pub fn completed(mut self, completed: u32) -> Self {
+    pub fn completed(mut self, completed: usize) -> Self {
         self.set_completed(completed);
         self
     }
@@ -38,7 +38,7 @@ impl Task {
     /// The default total unit count is `0`.
     ///
     /// A `self.total` of `0` results in an indeterminate task progress.
-    pub fn total(mut self, total: u32) -> Self {
+    pub fn total(mut self, total: usize) -> Self {
         self.set_total(total);
         self
     }
@@ -66,19 +66,19 @@ impl Task {
     }
 
     /// Increments the task's completed unit count by `increment`.
-    pub fn increment_completed_by(&mut self, increment: u32) {
+    pub fn increment_completed_by(&mut self, increment: usize) {
         self.set_completed(self.completed + increment);
     }
 
     /// Sets the task's completed unit count to `completed`.
-    pub fn set_completed(&mut self, completed: u32) {
+    pub fn set_completed(&mut self, completed: usize) {
         self.completed = completed;
     }
 
     /// Sets the task's total unit count to `total`.
     ///
     /// A `self.total` of `0` results in an indeterminate task progress.
-    pub fn set_total(&mut self, total: u32) {
+    pub fn set_total(&mut self, total: usize) {
         self.total = total;
     }
 
@@ -101,7 +101,7 @@ impl Task {
         self.generation = generation;
     }
 
-    pub(crate) fn discrete(&self) -> Option<(u32, u32)> {
+    pub(crate) fn discrete(&self) -> Option<(usize, usize)> {
         if self.total > 0 {
             let completed = self.completed.min(self.total);
             let total = self.completed.max(self.total);

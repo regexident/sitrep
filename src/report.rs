@@ -7,7 +7,7 @@ use crate::{task::Generation, ProgressId};
 pub struct Report {
     pub(crate) progress_id: ProgressId,
     pub(crate) label: Option<String>,
-    pub(crate) discrete: Option<(u32, u32)>,
+    pub(crate) discrete: Option<(usize, usize)>,
     pub(crate) fraction: Option<f32>,
     pub(crate) subreports: Vec<Report>,
     pub(crate) weight: f32,
@@ -32,7 +32,7 @@ impl Report {
     ///
     /// - `total > 0`
     /// - `completed <= total`
-    pub fn discrete(&self) -> Option<(u32, u32)> {
+    pub fn discrete(&self) -> Option<(usize, usize)> {
         self.discrete
     }
 
