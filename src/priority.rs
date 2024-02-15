@@ -1,23 +1,42 @@
 //! A progress event.
 
-use std::str::FromStr;
+use std::{
+    str::FromStr,
+    sync::atomic::{AtomicU8, Ordering},
+};
+
+use parking_lot::Once;
 
 const MIN_PRIORITY_LEVEL_KEY: &str = "SITREP_PRIO";
 
+pub(crate) fn global_min_priority_level() -> PriorityLevel {
+    static mut MIN_PRIORITY_LEVEL: PriorityLevel = PriorityLevel::MIN;
+    static ONCE: Once = Once::new();
+
+    // Safety:
+    // Accessing the static mut is safe here, as per:
+    // https://docs.rs/parking_lot/0.12.1/parking_lot/struct.Once.html#method.call_once
+    unsafe {
+        ONCE.call_once(|| MIN_PRIORITY_LEVEL = PriorityLevel::from_env().unwrap());
+        MIN_PRIORITY_LEVEL
+    }
+}
+
 /// A message's priority level.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default, Debug)]
+#[repr(u8)]
 pub enum PriorityLevel {
     /// A message at the "trace" level.
     #[default]
-    Trace = 0,
+    Trace = 1,
     /// A message at the "debug" level.
-    Debug = 1,
+    Debug = 2,
     /// A message at the "info" level.
-    Info = 2,
+    Info = 3,
     /// A message at the "warn" level.
-    Warn = 3,
+    Warn = 4,
     /// A message at the "error" level.
-    Error = 4,
+    Error = 5,
 }
 
 impl PriorityLevel {
@@ -56,7 +75,9 @@ impl PriorityLevel {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct EnvPriorityLevelError {
+    #[allow(dead_code)]
     pub(crate) unknown: String,
 }
 
@@ -73,7 +94,58 @@ impl FromStr for EnvPriorityLevel {
             "info" => Ok(Self(PriorityLevel::Info)),
             "warn" => Ok(Self(PriorityLevel::Warn)),
             "error" => Ok(Self(PriorityLevel::Error)),
-            _ => Err(EnvPriorityLevelError { unknown: string }),
+            _ => Err(Self::Err { unknown: string }),
         }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct PriorityLevelReprError {
+    #[allow(dead_code)]
+    pub(crate) unknown: u8,
+}
+
+pub(crate) struct PriorityLevelRepr(pub(crate) PriorityLevel);
+
+impl TryFrom<u8> for PriorityLevelRepr {
+    type Error = PriorityLevelReprError;
+
+    fn try_from(repr: u8) -> Result<Self, Self::Error> {
+        use PriorityLevel::*;
+
+        match repr {
+            x if x == Trace as u8 => Ok(Self(Trace)),
+            x if x == Debug as u8 => Ok(Self(Debug)),
+            x if x == Info as u8 => Ok(Self(Info)),
+            x if x == Warn as u8 => Ok(Self(Warn)),
+            x if x == Error as u8 => Ok(Self(Error)),
+            unknown => Err(Self::Error { unknown }),
+        }
+    }
+}
+
+pub(crate) struct AtomicPriorityLevel(pub(crate) AtomicU8);
+
+impl From<PriorityLevel> for AtomicPriorityLevel {
+    fn from(level: PriorityLevel) -> Self {
+        Self(AtomicU8::from(level as u8))
+    }
+}
+
+impl AtomicPriorityLevel {
+    pub(crate) fn load(&self, order: Ordering) -> Option<PriorityLevel> {
+        let repr = self.0.load(order);
+
+        if repr == 0 {
+            return None;
+        }
+
+        Some(PriorityLevelRepr::try_from(repr).unwrap().0)
+    }
+
+    pub(crate) fn store(&self, level: Option<PriorityLevel>, order: Ordering) {
+        let repr = level.map(|level| level as u8).unwrap_or(0);
+
+        self.0.store(repr, order)
     }
 }
