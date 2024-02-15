@@ -22,7 +22,19 @@ criterion = "0.3"
 
 [features]
 deadlocks-debugger = ["parking_lot/deadlock_detection"]
+test-utils = []
 
 [[bench]]
-name = "criterion"
+name = "message"
 harness = false
+required-features = ["test-utils"]
+
+[[bench]]
+name = "update"
+harness = false
+required-features = ["test-utils"]
+
+[[bench]]
+name = "report"
+harness = false
+required-features = ["test-utils"]

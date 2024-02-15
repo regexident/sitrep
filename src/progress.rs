@@ -513,5 +513,49 @@ impl Reporter for Progress {
     }
 }
 
+#[doc(hidden)]
+#[cfg(any(test, feature = "test-utils"))]
+pub mod test_utils {
+    use super::*;
+
+    #[doc(hidden)]
+    pub struct NopObserver;
+
+    impl Observer for NopObserver {
+        fn observe(&self, event: Event) {
+            std::hint::black_box(event);
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn make_stand_alone(
+        observer: Option<Arc<dyn Observer>>,
+    ) -> (Arc<Progress>, Weak<impl Reporter>) {
+        let observer = observer.unwrap_or_else(|| Arc::new(NopObserver));
+        Progress::new(Task::default(), observer)
+    }
+
+    #[doc(hidden)]
+    pub fn make_hierarchy() -> (Arc<Vec<Arc<Progress>>>, Weak<impl Reporter>) {
+        let (parent, reporter) = Progress::new(Task::default(), Arc::new(NopObserver));
+
+        let mut progresses = vec![Arc::clone(&parent)];
+
+        for _ in 1..=10 {
+            let child = Progress::new_with_parent(Task::default(), &parent);
+            progresses.push(Arc::clone(&child));
+
+            for _ in 1..=10 {
+                let grandchild = Progress::new_with_parent(Task::default(), &child);
+                progresses.push(Arc::clone(&grandchild));
+            }
+        }
+
+        let progresses = Arc::new(progresses);
+
+        (progresses, reporter)
+    }
+}
+
 #[cfg(test)]
 mod tests;

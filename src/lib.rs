@@ -15,3 +15,6 @@ pub use self::{
     report::Report,
     task::{Generation, Task},
 };
+
+#[cfg(any(test, feature = "test-utils"))]
+pub use self::progress::test_utils;
