@@ -333,7 +333,7 @@ impl Progress {
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
     pub fn set_label(self: &Arc<Self>, label: impl Into<Option<String>>) {
-        self.update(|task| task.set_label(label));
+        self.update(|task| task.label = label.into());
     }
 
     /// Increments the task's completed unit count by `1`.
@@ -344,7 +344,7 @@ impl Progress {
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
     pub fn increment_completed(self: &Arc<Self>) {
-        self.update(|task| task.increment_completed());
+        self.update(|task| task.completed += 1);
     }
 
     /// Increments the task's completed unit count by `increment`.
@@ -355,7 +355,7 @@ impl Progress {
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
     pub fn increment_completed_by(self: &Arc<Self>, increment: usize) {
-        self.update(|task| task.increment_completed_by(increment));
+        self.update(|task| task.completed += increment);
     }
 
     /// Sets the task's completed unit count to `completed`.
@@ -366,7 +366,7 @@ impl Progress {
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
     pub fn set_completed(self: &Arc<Self>, completed: usize) {
-        self.update(|task| task.set_completed(completed));
+        self.update(|task| task.completed = completed);
     }
 
     /// Sets the task's total unit count to `total`.
@@ -379,22 +379,7 @@ impl Progress {
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
     pub fn set_total(self: &Arc<Self>, total: usize) {
-        self.update(|task| task.set_total(total));
-    }
-
-    /// Sets the task's weight to `weight`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `weight <= 0.0`.
-    ///
-    /// # Performance
-    ///
-    /// When making multiple changes prefer to use the `update(…)` method over multiple
-    /// individual calls to setters as those would emit one event per setter call,
-    /// while `progress.update(|task| … )` only emits a single event at the very end.
-    pub fn set_weight(self: &Arc<Self>, weight: f64) {
-        self.update(|task| task.set_weight(weight));
+        self.update(|task| task.total = total);
     }
 
     /// Updates the associated task, emitting a corresponding event afterwards.
@@ -415,7 +400,7 @@ impl Progress {
             guard.observer.observe(Event::GenerationOverflow);
         }
 
-        guard.task.set_generation(next_generation);
+        guard.task.generation = next_generation;
 
         self.emit_update_event(&*guard.observer);
     }
@@ -458,7 +443,6 @@ impl Reporter for Progress {
 
         let progress_id = self.id;
         let label = task.label.clone();
-        let weight = task.weight;
 
         let subreports: Vec<_> = self
             .relationships
@@ -468,48 +452,20 @@ impl Reporter for Progress {
             .map(|progress| progress.report())
             .collect();
 
-        let discrete = if subreports.is_empty() {
-            task.discrete()
-        } else {
-            subreports
-                .iter()
-                .filter_map(|report| report.discrete)
-                .reduce(|sum, item| (sum.0 + item.0, sum.1 + item.1))
-        };
+        let determinate_reports = subreports.iter().filter(|&report| !report.is_indeterminate);
 
-        let total_weight = subreports
-            .iter()
-            .filter(|&report| report.fraction.is_some())
-            .map(|report| report.weight)
-            .fold(0.0, |sum, item| sum + item);
-
-        let fraction = if subreports.is_empty() {
-            task.fraction()
-        } else {
-            subreports
-                .iter()
-                .filter_map(|report| {
-                    report
-                        .fraction
-                        .map(|fraction| fraction * report.weight / total_weight)
-                })
-                .reduce(|sum, item| sum + item)
-        };
+        let (completed, total) = determinate_reports
+            .map(|report| report.discrete())
+            .fold(task.effective_discrete(), |sum, item| {
+                (sum.0.saturating_add(item.0), sum.1.saturating_add(item.1))
+            });
 
         let generation = subreports
             .iter()
             .map(|report| report.generation)
             .fold(task.generation, |max, item| max.max(item));
 
-        Report {
-            progress_id,
-            label,
-            discrete,
-            fraction,
-            subreports,
-            weight,
-            generation,
-        }
+        Report::new(progress_id, label, completed, total, subreports, generation)
     }
 }
 

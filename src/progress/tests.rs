@@ -274,14 +274,17 @@ mod update {
         let (observer, erased_observer) = SpyObserver::new();
 
         let (parent, _reporter) = Progress::new(Task::default(), erased_observer);
+        assert_eq!(observer.update_events_len(), 0);
         let child = Progress::new_with_parent(Task::default(), &parent);
+        assert_eq!(observer.update_events_len(), 1);
         let grandchild = Progress::new_with_parent(Task::default(), &child);
+        assert_eq!(observer.update_events_len(), 2);
 
         parent.update(|_| {});
         child.update(|_| {});
         grandchild.update(|_| {});
 
-        assert_eq!(observer.update_events_len(), 3);
+        assert_eq!(observer.update_events_len(), 5);
     }
 }
 
@@ -295,10 +298,9 @@ mod report {
         let (progress, weak_reporter) = Progress::new(Task::default(), erased_observer);
 
         progress.update(|task| {
-            task.set_label("label".to_owned());
-            task.set_completed(5);
-            task.set_total(10);
-            task.set_weight(0.25);
+            task.label = Some("label".to_owned());
+            task.completed = 5;
+            task.total = 10;
         });
 
         let reporter = weak_reporter.upgrade().unwrap();
@@ -307,10 +309,10 @@ mod report {
 
         assert_eq!(report.progress_id, progress.id);
         assert_eq!(report.label.unwrap(), "label".to_owned());
-        assert_eq!(report.discrete.unwrap(), (5, 10));
-        assert_eq!(report.fraction.unwrap(), 0.5);
+        assert_eq!(report.completed, 5);
+        assert_eq!(report.total, 10);
+        assert_eq!(report.fraction, 0.5);
         assert_eq!(report.subreports, vec![]);
-        assert_eq!(report.weight, 0.25);
     }
 
     #[test]
@@ -323,8 +325,8 @@ mod report {
 
         parent.update(|task| {
             task.label = Some("parent".to_owned());
-            task.completed = 0;
-            task.total = 1;
+            task.completed = 1;
+            task.total = 2;
         });
 
         child.update(|task| {
@@ -335,8 +337,8 @@ mod report {
 
         grandchild.update(|task| {
             task.label = Some("grandchild".to_owned());
-            task.completed = 5;
-            task.total = 10;
+            task.completed = 1;
+            task.total = 2;
         });
 
         let reporter = weak_reporter.upgrade().unwrap();
@@ -345,9 +347,27 @@ mod report {
 
         assert_eq!(parent_report.progress_id, parent.id);
         assert_eq!(parent_report.label.unwrap(), "parent".to_owned());
-        assert_eq!(parent_report.discrete.unwrap(), (0, 1));
-        assert_eq!(parent_report.fraction.unwrap(), 0.5);
-        assert_eq!(parent_report.subreports, vec![]);
-        assert_eq!(parent_report.weight, 0.25);
+        assert_eq!(parent_report.completed, 3);
+        assert_eq!(parent_report.total, 6);
+        assert_eq!(parent_report.fraction, 0.5);
+        assert_eq!(parent_report.subreports.len(), 1);
+
+        let child_report = parent_report.subreports[0].clone();
+
+        assert_eq!(child_report.progress_id, child.id);
+        assert_eq!(child_report.label.unwrap(), "child".to_owned());
+        assert_eq!(child_report.completed, 2);
+        assert_eq!(child_report.total, 4);
+        assert_eq!(child_report.fraction, 0.5);
+        assert_eq!(child_report.subreports.len(), 1);
+
+        let grandchild_report = child_report.subreports[0].clone();
+
+        assert_eq!(grandchild_report.progress_id, grandchild.id);
+        assert_eq!(grandchild_report.label.unwrap(), "grandchild".to_owned());
+        assert_eq!(grandchild_report.completed, 1);
+        assert_eq!(grandchild_report.total, 2);
+        assert_eq!(grandchild_report.fraction, 0.5);
+        assert_eq!(grandchild_report.subreports.len(), 0);
     }
 }

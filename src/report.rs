@@ -5,76 +5,76 @@ use crate::{task::Generation, ProgressId};
 /// A progress' report.
 #[derive(Clone, PartialEq, Debug)]
 pub struct Report {
-    pub(crate) progress_id: ProgressId,
-    pub(crate) label: Option<String>,
-    pub(crate) discrete: Option<(usize, usize)>,
-    pub(crate) fraction: Option<f64>,
-    pub(crate) subreports: Vec<Report>,
-    pub(crate) weight: f64,
+    /// The associated progress' identifier.
+    pub progress_id: ProgressId,
+    /// The associated progress' label.
+    pub label: Option<String>,
+    /// The number of accumulative completed units of work
+    /// (i.e. including sub-reports' completed units).
+    pub completed: usize,
+    /// The number of accumulative total units of work
+    /// (i.e. including sub-reports' total units).
+    pub total: usize,
+    /// A fractional representation of accumulative progress
+    /// (i.e. including sub-reports) within range of `0.0..=1.0`.
+    pub fraction: f64,
+    /// A boolean value that indicates whether the tracked progress is indeterminate.
+    pub is_indeterminate: bool,
+    /// The reports of the associated progress' children.
+    pub subreports: Vec<Report>,
+
+    /// The generation at which the associated task,
+    /// or any of its sub-tasks, were most recently changed.
     pub(crate) generation: Generation,
 }
 
 impl Report {
-    /// The associated progress' identifier.
-    pub fn progress_id(&self) -> ProgressId {
-        self.progress_id
+    pub(crate) fn new(
+        progress_id: ProgressId,
+        label: Option<String>,
+        completed: usize,
+        total: usize,
+        subreports: Vec<Report>,
+        generation: Generation,
+    ) -> Self {
+        let completed = Self::completed(completed, total);
+        let total = Self::total(completed, total);
+        let fraction = Self::fraction(completed, total);
+        let is_indeterminate = Self::is_indeterminate(completed, total);
+
+        Self {
+            progress_id,
+            label,
+            completed,
+            total,
+            fraction,
+            is_indeterminate,
+            subreports,
+            generation,
+        }
     }
 
-    /// The associated progress' label.
-    pub fn label(&self) -> Option<&str> {
-        self.label.as_deref()
+    fn completed(completed: usize, total: usize) -> usize {
+        completed.min(total)
     }
 
-    /// Returns a discrete representation of progress as `Some((completed, total))`
-    /// if the associated task is determinate, otherwise returns `None`.
-    ///
-    /// # Invariants:
-    ///
-    /// - `total > 0`
-    /// - `completed <= total`
-    pub fn discrete(&self) -> Option<(usize, usize)> {
-        self.discrete
+    fn total(completed: usize, total: usize) -> usize {
+        completed.max(total)
     }
 
-    /// Returns a fractional representation of progress as `Some(fraction)`
-    /// if the associated task is determinate, otherwise returns `None`.
-    ///
-    /// If the associated task has NO children, then the value of `fraction`
-    /// conceptually corresponds to the following formula:
-    ///
-    /// ```ignore
-    /// let (completed, total) = self.discrete().unwrap();
-    /// let fraction = 1.0 * (completed as f64) / (total as f64);
-    /// ```
-    ///
-    /// If the associated task has children, then the value of `fraction`
-    /// conceptually corresponds a weighted sum of its children's fraction values:
-    ///
-    /// ```ignore
-    /// let mut fraction = 0.0;
-    /// let mut total_weight = 0.0;
-    /// for subreport in self.subreports() {
-    ///     fraction += subreport.fraction() * subreport.weight();
-    ///     total_weight += subreport.weight();
-    /// }
-    /// fraction /= total_weight;
-    /// ```
-    ///
-    /// # Invariants:
-    ///
-    /// - `fraction >= 0.0`
-    /// - `fraction <= 1.0`
-    pub fn fraction(&self) -> Option<f64> {
-        self.fraction
+    fn fraction(completed: usize, total: usize) -> f64 {
+        match (completed, total) {
+            (0, 0) => 0.0,
+            (_, 0) => 1.0,
+            (completed, total) => 1.0 * (completed as f64) / (total as f64),
+        }
     }
 
-    /// Returns the reports of the associated progress' children.
-    pub fn subreports(&self) -> &[Report] {
-        &self.subreports
+    fn is_indeterminate(completed: usize, total: usize) -> bool {
+        (completed == 0) && (total == 0)
     }
 
-    /// Returns the generation at which the associated task, or any of its sub-tasks, were last changed.
-    pub fn generation(&self) -> Generation {
-        self.generation
+    pub(crate) fn discrete(&self) -> (usize, usize) {
+        (self.completed, self.total)
     }
 }
