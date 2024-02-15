@@ -10,7 +10,7 @@ mod report;
 mod task;
 
 pub use self::{
-    event::{Event, MessageEvent, ProgressEvent, ProgressEventKind},
+    event::{Event, MessageEvent, RemovalEvent, UpdateEvent},
     observer::StdMpscObserver,
     priority::PriorityLevel,
     progress::{Observer, Progress, ProgressId, Reporter},

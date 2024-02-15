@@ -28,33 +28,34 @@ impl SpyObserver {
         self.events.lock().unwrap().len()
     }
 
-    fn progress_events(&self) -> Vec<ProgressEvent> {
+    fn update_events(&self) -> Vec<UpdateEvent> {
         self.events()
             .into_iter()
             .filter_map(|event| match event {
-                Event::Progress(event) => Some(event.clone()),
+                Event::Update(event) => Some(event.clone()),
                 _ => None,
             })
             .collect()
     }
 
-    fn message_events(&self) -> Vec<(ProgressId, MessageEvent)> {
-        self.progress_events()
+    fn message_events(&self) -> Vec<MessageEvent> {
+        self.events()
             .into_iter()
-            .filter_map(|event| match event.kind {
-                ProgressEventKind::Message(message_event) => {
-                    Some((event.id, message_event.clone()))
-                }
+            .filter_map(|event| match event {
+                Event::Message(event) => Some(event.clone()),
                 _ => None,
             })
             .collect()
     }
 
-    fn update_events_len(&self) -> usize {
-        self.progress_events()
-            .iter()
-            .filter(|event| matches!(event.kind, ProgressEventKind::Update))
-            .count()
+    fn removed_events(&self) -> Vec<RemovalEvent> {
+        self.events()
+            .into_iter()
+            .filter_map(|event| match event {
+                Event::Removed(event) => Some(event.clone()),
+                _ => None,
+            })
+            .collect()
     }
 }
 
@@ -190,9 +191,9 @@ mod message {
 
         let expected_levels = [PriorityLevel::Warn, PriorityLevel::Error];
 
-        for (_id, event) in observer.message_events() {
-            if !expected_levels.contains(&event.level) {
-                panic!("unexpected level: {:?}", event.level);
+        for event in observer.message_events() {
+            if !expected_levels.contains(&event.priority) {
+                panic!("unexpected priority level: {:?}", event.priority);
             }
         }
     }
@@ -214,14 +215,10 @@ mod message {
         let actual = observer.message_events();
         let expected: Vec<_> = PriorityLevel::ALL
             .into_iter()
-            .map(|level| {
-                (
-                    progress.id(),
-                    MessageEvent {
-                        message: message.to_owned(),
-                        level,
-                    },
-                )
+            .map(|priority| MessageEvent {
+                id: progress.id(),
+                message: message.to_owned(),
+                priority,
             })
             .collect();
 
@@ -266,7 +263,7 @@ mod update {
 
         progress.update(|_| {});
 
-        assert_eq!(observer.update_events_len(), 1);
+        assert_eq!(observer.update_events().len(), 1);
     }
 
     #[test]
@@ -274,17 +271,17 @@ mod update {
         let (observer, erased_observer) = SpyObserver::new();
 
         let (parent, _reporter) = Progress::new(Task::default(), erased_observer);
-        assert_eq!(observer.update_events_len(), 0);
+        assert_eq!(observer.update_events().len(), 0);
         let child = Progress::new_with_parent(Task::default(), &parent);
-        assert_eq!(observer.update_events_len(), 1);
+        assert_eq!(observer.update_events().len(), 1);
         let grandchild = Progress::new_with_parent(Task::default(), &child);
-        assert_eq!(observer.update_events_len(), 2);
+        assert_eq!(observer.update_events().len(), 2);
 
         parent.update(|_| {});
         child.update(|_| {});
         grandchild.update(|_| {});
 
-        assert_eq!(observer.update_events_len(), 5);
+        assert_eq!(observer.update_events().len(), 5);
     }
 }
 

@@ -15,7 +15,7 @@ use crate::{
     priority::{global_min_priority_level, AtomicPriorityLevel},
     report::Report,
     task::Task,
-    Generation, MessageEvent, PriorityLevel, ProgressEvent, ProgressEventKind,
+    Generation, MessageEvent, PriorityLevel, RemovalEvent, UpdateEvent,
 };
 
 static NEXT_ID: AtomicUsize = AtomicUsize::new(0);
@@ -409,19 +409,17 @@ impl Progress {
         self: &Arc<Self>,
         observer: &dyn Observer,
         message: String,
-        level: PriorityLevel,
+        priority: PriorityLevel,
     ) {
-        observer.observe(Event::Progress(ProgressEvent {
+        observer.observe(Event::Message(MessageEvent {
             id: self.id(),
-            kind: ProgressEventKind::Message(MessageEvent { message, level }),
+            message,
+            priority,
         }));
     }
 
     fn emit_update_event(self: &Arc<Self>, observer: &dyn Observer) {
-        observer.observe(Event::Progress(ProgressEvent {
-            id: self.id(),
-            kind: ProgressEventKind::Update,
-        }));
+        observer.observe(Event::Update(UpdateEvent { id: self.id() }));
     }
 }
 
@@ -430,10 +428,7 @@ impl Drop for Progress {
         self.state
             .read()
             .observer
-            .observe(Event::Progress(ProgressEvent {
-                id: self.id(),
-                kind: ProgressEventKind::Removed,
-            }));
+            .observe(Event::Removed(RemovalEvent { id: self.id() }));
     }
 }
 
