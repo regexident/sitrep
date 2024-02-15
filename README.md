@@ -12,8 +12,55 @@ Frontend-agnostic progress reporting.
 ## Usage
 
 ```rust
-// How to use this library ...
+use std::{sync::{mpsc, Arc}, thread, time::Duration};
+
+use sitrep::{
+    Event, MessageEvent, Progress, RemovalEvent, Reporter, StdMpscObserver, Task, UpdateEvent,
+};
+
+fn main() {
+    let (sender, receiver) = mpsc::channel();
+    let observer = Arc::new(StdMpscObserver::from(sender));
+
+    let (progress, reporter) = Progress::new(Task::default(), observer);
+
+    // The sending end of the progress report:
+    let worker_handle = thread::spawn(move || {
+        progress.set_label("Crunching numbers ...".to_owned());
+
+        let total = 100;
+        progress.set_total(total);
+
+        for completed in 1..=total {
+            thread::sleep(Duration::from_millis(100));
+
+            progress.set_completed(completed);
+        }
+    });
+
+    // The receiving end of the progress report:
+    let reporter_handle = thread::spawn(move || {
+        while let Ok(event) = receiver.recv() {
+            let Event::Update(UpdateEvent { id }) = event else {
+                continue;
+            };
+
+            // The reporter is only available as long as
+            // the corresponding progress is alive, too:
+            let Some(reporter) = reporter.upgrade() else {
+                break;
+            };
+
+            println!("{:#?}", reporter.report());
+        }
+    });
+
+    worker_handle.join().unwrap();
+    reporter_handle.join().unwrap();
+}
 ```
+
+See the [examples](examples/) directory for more examples.
 
 ## Documentation
 
