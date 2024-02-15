@@ -3,6 +3,7 @@
 //! Frontend-agnostic progress reporting.
 
 mod event;
+mod observer;
 mod priority;
 mod progress;
 mod report;
@@ -10,6 +11,7 @@ mod task;
 
 pub use self::{
     event::{Event, MessageEvent, ProgressEvent, ProgressEventKind},
+    observer::StdMpscObserver,
     priority::PriorityLevel,
     progress::{Observer, Progress, ProgressId, Reporter},
     report::Report,
