@@ -11,8 +11,11 @@ use std::{
 use parking_lot::RwLock;
 
 use crate::{
-    event::Event, report::Report, task::Task, Generation, MessageEvent, PriorityLevel,
-    ProgressEvent, ProgressEventKind,
+    event::Event,
+    priority::{global_min_priority_level, AtomicPriorityLevel},
+    report::Report,
+    task::Task,
+    Generation, MessageEvent, PriorityLevel, ProgressEvent, ProgressEventKind,
 };
 
 static NEXT_ID: AtomicUsize = AtomicUsize::new(0);
@@ -51,8 +54,12 @@ struct ProgressState {
     ///
     /// All progresses in a progress tree share the same counter.
     max_generation: Arc<AtomicUsize>,
+}
+
+/// The progress' atomic state.
+struct ProgressAtomicState {
     /// The minimum priority level.
-    min_priority_level: Option<PriorityLevel>,
+    min_priority_level: AtomicPriorityLevel,
 }
 
 /// The progress' relationships.
@@ -71,6 +78,8 @@ pub struct Progress {
     relationships: RwLock<ProgressRelationships>,
     /// The progress' state.
     state: RwLock<ProgressState>,
+    /// The progress' atomic state.
+    atomic_state: ProgressAtomicState,
 }
 
 impl Progress {
@@ -127,21 +136,23 @@ impl Progress {
         let parent = parent;
         let children = HashMap::new();
 
-        let min_priority_level = None;
-
         let relationships = RwLock::new(ProgressRelationships { parent, children });
 
         let state = RwLock::new(ProgressState {
             task,
             observer,
             max_generation,
-            min_priority_level,
         });
+
+        let min_priority_level = AtomicPriorityLevel::from(PriorityLevel::MIN);
+
+        let atomic_state = ProgressAtomicState { min_priority_level };
 
         Arc::new(Self {
             id,
             relationships,
             state,
+            atomic_state,
         })
     }
 
@@ -150,8 +161,11 @@ impl Progress {
         let parent_state = self.state.read();
 
         let max_generation = {
+            let child_state = child.state.read();
+
             let parent_max_generation = parent_state.max_generation.load(Ordering::Relaxed);
-            let child_max_generation = child.state.read().max_generation.load(Ordering::Relaxed);
+            let child_max_generation = child_state.max_generation.load(Ordering::Relaxed);
+
             parent_max_generation.max(child_max_generation)
         };
 
@@ -160,13 +174,15 @@ impl Progress {
             .max_generation
             .store(max_generation, Ordering::SeqCst);
 
+        let mut child_state = child.state.write();
+
         // Children share the generation of their parent:
-        child.state.write().max_generation = Arc::clone(&parent_state.max_generation);
+        child_state.max_generation = Arc::clone(&parent_state.max_generation);
 
         // Make sure the child uses the parent's observer from now on:
         let observer = {
             let parent_observer = parent_state.observer.clone();
-            std::mem::replace(&mut child.state.write().observer, parent_observer)
+            std::mem::replace(&mut child_state.observer, parent_observer)
         };
 
         self.relationships
@@ -174,9 +190,7 @@ impl Progress {
             .children
             .insert(child.id(), Arc::clone(child));
 
-        let state = self.state.read();
-
-        self.emit_update_event(&*state.observer);
+        self.emit_update_event(&*parent_state.observer);
 
         observer
     }
@@ -292,14 +306,23 @@ impl Progress {
     ///
     /// where `level` is one of `[trace, debug, info, warn, error]`.
     pub fn set_min_priority_level(&self, level: Option<PriorityLevel>) {
-        self.state.write().min_priority_level = level;
+        self.atomic_state
+            .min_priority_level
+            .store(level, Ordering::SeqCst)
     }
 
-    fn min_priority_level(&self) -> PriorityLevel {
-        self.state
-            .read()
+    /// Returns the effective minimum priority level.
+    ///
+    /// If no local level has been overridden it returns
+    /// a fallback in the following order of precedence:
+    ///
+    /// - environment (i.e. `SITREP_PRIORITY=[level]`)
+    /// - default (i.e. `PriorityLevel::Trace`)
+    pub fn min_priority_level(&self) -> PriorityLevel {
+        self.atomic_state
             .min_priority_level
-            .unwrap_or_else(|| PriorityLevel::from_env().unwrap_or_default())
+            .load(Ordering::Relaxed)
+            .unwrap_or_else(global_min_priority_level)
     }
 
     /// Sets the task's label to `label`.
