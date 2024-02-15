@@ -393,7 +393,7 @@ impl Progress {
     /// When making multiple changes prefer to use the `update(…)` method over multiple
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
-    pub fn set_weight(self: &Arc<Self>, weight: f32) {
+    pub fn set_weight(self: &Arc<Self>, weight: f64) {
         self.update(|task| task.set_weight(weight));
     }
 

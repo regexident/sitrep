@@ -12,7 +12,7 @@ pub struct Task {
     pub(crate) label: Option<String>,
     pub(crate) completed: usize,
     pub(crate) total: usize,
-    pub(crate) weight: f32,
+    pub(crate) weight: f64,
     pub(crate) generation: Generation,
 }
 
@@ -50,7 +50,7 @@ impl Task {
     /// # Panics
     ///
     /// Panics if `weight <= 0.0`.
-    pub fn weight(mut self, weight: f32) -> Self {
+    pub fn weight(mut self, weight: f64) -> Self {
         self.set_weight(weight);
         self
     }
@@ -87,7 +87,7 @@ impl Task {
     /// # Panics
     ///
     /// Panics if `weight <= 0.0`.
-    pub fn set_weight(&mut self, weight: f32) {
+    pub fn set_weight(&mut self, weight: f64) {
         assert!(weight > 0.0);
         self.weight = weight;
     }
@@ -111,9 +111,9 @@ impl Task {
         }
     }
 
-    pub(crate) fn fraction(&self) -> Option<f32> {
+    pub(crate) fn fraction(&self) -> Option<f64> {
         self.discrete()
-            .map(|(completed, total)| (1.0 * (completed as f64) / (total as f64)) as f32)
+            .map(|(completed, total)| (1.0 * (completed as f64) / (total as f64)) as f64)
     }
 }
 

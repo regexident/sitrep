@@ -8,9 +8,9 @@ pub struct Report {
     pub(crate) progress_id: ProgressId,
     pub(crate) label: Option<String>,
     pub(crate) discrete: Option<(usize, usize)>,
-    pub(crate) fraction: Option<f32>,
+    pub(crate) fraction: Option<f64>,
     pub(crate) subreports: Vec<Report>,
-    pub(crate) weight: f32,
+    pub(crate) weight: f64,
     pub(crate) generation: Generation,
 }
 
@@ -44,7 +44,7 @@ impl Report {
     ///
     /// ```ignore
     /// let (completed, total) = self.discrete().unwrap();
-    /// let fraction = 1.0 * (completed as f32) / (total as f32);
+    /// let fraction = 1.0 * (completed as f64) / (total as f64);
     /// ```
     ///
     /// If the associated task has children, then the value of `fraction`
@@ -64,7 +64,7 @@ impl Report {
     ///
     /// - `fraction >= 0.0`
     /// - `fraction <= 1.0`
-    pub fn fraction(&self) -> Option<f32> {
+    pub fn fraction(&self) -> Option<f64> {
         self.fraction
     }
 
