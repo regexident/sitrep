@@ -23,6 +23,7 @@ Please make sure to add your changes to the appropriate categories:
 - Made `StdMpscObserver` impl `Send` + `Sync`.
 - Added `get()` method to `Progress` for accessing a specific (sub)progress (within the progress subtree) by its identifier.
 - Made `ProgressId` impl `Default`.
+- Made `Report` impl `Default`.
 
 ### Changed
 

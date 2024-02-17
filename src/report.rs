@@ -3,7 +3,7 @@
 use crate::{task::Generation, ProgressId};
 
 /// A progress' report.
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Default, Debug)]
 pub struct Report {
     /// The associated progress' identifier.
     pub progress_id: ProgressId,
