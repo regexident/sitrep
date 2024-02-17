@@ -27,6 +27,7 @@ Please make sure to add your changes to the appropriate categories:
 
 - Renamed field `generation` of `Task` to `last_change`.
 - Renamed field `generation` of `Report` to `last_change`.
+- Rename field `max_generation` of `Progress` to `last_tree_change`.
 
 ### Deprecated
 

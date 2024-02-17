@@ -50,10 +50,10 @@ struct ProgressState {
     ///
     /// All progresses in a progress tree share the same observer.
     observer: Arc<dyn Observer>,
-    /// An atomic counter for obtaining the tree's generation.
+    /// An atomic counter for obtaining the tree's last change generation.
     ///
     /// All progresses in a progress tree share the same counter.
-    max_generation: Arc<AtomicUsize>,
+    last_tree_change: Arc<AtomicUsize>,
 }
 
 /// The progress' atomic state.
@@ -90,9 +90,9 @@ impl Progress {
     /// which is used on the receiving end of the channel for obtaining reports.
     pub fn new(task: Task, observer: Arc<dyn Observer>) -> (Arc<Self>, Weak<impl Reporter>) {
         let parent = Weak::new();
-        let max_generation = Arc::new(AtomicUsize::default());
+        let last_tree_change = Arc::new(AtomicUsize::default());
 
-        let progress = Self::new_impl(task, parent, observer, max_generation);
+        let progress = Self::new_impl(task, parent, observer, last_tree_change);
         let reporter = Arc::downgrade(&progress);
 
         (progress, reporter)
@@ -109,9 +109,9 @@ impl Progress {
         // Children share the observer of their parent:
         let observer = parent_state.observer.clone();
         // Children share the generation of their parent:
-        let max_generation = Arc::clone(&parent_state.max_generation);
+        let last_tree_change = Arc::clone(&parent_state.last_tree_change);
 
-        let child = Self::new_impl(task, Arc::downgrade(parent), observer, max_generation);
+        let child = Self::new_impl(task, Arc::downgrade(parent), observer, last_tree_change);
 
         parent
             .relationships
@@ -130,7 +130,7 @@ impl Progress {
         task: Task,
         parent: Weak<Self>,
         observer: Arc<dyn Observer>,
-        max_generation: Arc<AtomicUsize>,
+        last_tree_change: Arc<AtomicUsize>,
     ) -> Arc<Self> {
         let id = ProgressId::new_unique();
         let parent = parent;
@@ -141,7 +141,7 @@ impl Progress {
         let state = RwLock::new(ProgressState {
             task,
             observer,
-            max_generation,
+            last_tree_change,
         });
 
         let min_priority_level = AtomicPriorityLevel::from(PriorityLevel::MIN);
@@ -160,24 +160,24 @@ impl Progress {
     pub fn attach_child(self: &Arc<Self>, child: &Arc<Self>) -> Arc<dyn Observer> {
         let parent_state = self.state.read();
 
-        let max_generation = {
+        let last_tree_change = {
             let child_state = child.state.read();
 
-            let parent_max_generation = parent_state.max_generation.load(Ordering::Relaxed);
-            let child_max_generation = child_state.max_generation.load(Ordering::Relaxed);
+            let parent_last_tree_change = parent_state.last_tree_change.load(Ordering::Relaxed);
+            let child_last_tree_change = child_state.last_tree_change.load(Ordering::Relaxed);
 
-            parent_max_generation.max(child_max_generation)
+            parent_last_tree_change.max(child_last_tree_change)
         };
 
         // Bump the parent's generation, if necessary:
         parent_state
-            .max_generation
-            .store(max_generation, Ordering::SeqCst);
+            .last_tree_change
+            .store(last_tree_change, Ordering::SeqCst);
 
         let mut child_state = child.state.write();
 
         // Children share the generation of their parent:
-        child_state.max_generation = Arc::clone(&parent_state.max_generation);
+        child_state.last_tree_change = Arc::clone(&parent_state.last_tree_change);
 
         // Make sure the child uses the parent's observer from now on:
         let observer = {
@@ -411,7 +411,7 @@ impl Progress {
 
         update_task(&mut guard.task);
 
-        let latest_change = Generation(guard.max_generation.fetch_add(1, Ordering::Relaxed));
+        let latest_change = Generation(guard.last_tree_change.fetch_add(1, Ordering::Relaxed));
 
         if latest_change < guard.task.last_change {
             guard.observer.observe(Event::GenerationOverflow);
