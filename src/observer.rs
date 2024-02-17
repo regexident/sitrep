@@ -26,3 +26,7 @@ impl Observer for StdMpscObserver {
         let _ = self.sender.send(event);
     }
 }
+
+unsafe impl Send for StdMpscObserver where Event: Send {}
+
+unsafe impl Sync for StdMpscObserver where Event: Send {}
