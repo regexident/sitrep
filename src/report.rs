@@ -54,6 +54,31 @@ impl Report {
         }
     }
 
+    /// Returns a pruned version with all subreports older than
+    /// `min_generation` removed, or `None` if `self` itself is older.
+    pub fn to_pruned(&self, min_generation: Generation) -> Option<Self> {
+        self.clone().into_pruned(min_generation)
+    }
+
+    /// Consumes the `Report` and returns a pruned version with all subreports
+    /// older than `min_generation` removed, or `None` if `self` itself is older.
+    pub fn into_pruned(mut self, min_generation: Generation) -> Option<Self> {
+        if self.prune(min_generation) {
+            Some(self)
+        } else {
+            {
+                None
+            }
+        }
+    }
+
+    fn prune(&mut self, min_generation: Generation) -> bool {
+        self.subreports
+            .retain_mut(|report| report.prune(min_generation));
+
+        self.generation >= min_generation
+    }
+
     fn completed(completed: usize, total: usize) -> usize {
         completed.min(total)
     }
@@ -76,5 +101,68 @@ impl Report {
 
     pub(crate) fn discrete(&self) -> (usize, usize) {
         (self.completed, self.total)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod to_pruned {
+        use super::*;
+
+        #[test]
+        fn prunes_self() {
+            let report = Report {
+                progress_id: ProgressId::new_unique(),
+                generation: Generation(0),
+                ..Default::default()
+            };
+
+            assert_eq!(report.to_pruned(Generation(1)), None);
+        }
+
+        #[test]
+        fn prunes_subreports() {
+            let parent_id = ProgressId::new_unique();
+            let child_id = ProgressId::new_unique();
+            let grand_child_id = ProgressId::new_unique();
+
+            let report = Report {
+                progress_id: parent_id,
+                subreports: vec![
+                    Report {
+                        progress_id: ProgressId::new_unique(),
+                        generation: Generation(1),
+                        ..Default::default()
+                    },
+                    Report {
+                        progress_id: child_id,
+                        subreports: vec![Report {
+                            progress_id: grand_child_id,
+                            generation: Generation(2),
+                            ..Default::default()
+                        }],
+                        generation: Generation(2),
+                        ..Default::default()
+                    },
+                ],
+                generation: Generation(2),
+                ..Default::default()
+            };
+
+            let parent = report.to_pruned(Generation(2)).unwrap();
+
+            assert_eq!(parent.progress_id, parent_id);
+            assert_eq!(parent.subreports.len(), 1);
+
+            let child = &parent.subreports[0];
+            assert_eq!(child.progress_id, child_id);
+            assert_eq!(child.subreports.len(), 1);
+
+            let grand_child = &child.subreports[0];
+            assert_eq!(grand_child.progress_id, grand_child_id);
+            assert_eq!(grand_child.subreports.len(), 0);
+        }
     }
 }
