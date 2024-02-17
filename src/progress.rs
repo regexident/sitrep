@@ -478,12 +478,19 @@ impl Reporter for Progress {
                 (sum.0.saturating_add(item.0), sum.1.saturating_add(item.1))
             });
 
-        let generation = subreports
+        let last_change = subreports
             .iter()
-            .map(|report| report.generation)
+            .map(|report| report.last_change)
             .fold(task.last_change, |max, item| max.max(item));
 
-        Report::new(progress_id, label, completed, total, subreports, generation)
+        Report::new(
+            progress_id,
+            label,
+            completed,
+            total,
+            subreports,
+            last_change,
+        )
     }
 }
 

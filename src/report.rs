@@ -25,7 +25,7 @@ pub struct Report {
 
     /// The generation at which the associated task,
     /// or any of its sub-tasks, were most recently changed.
-    pub(crate) generation: Generation,
+    pub(crate) last_change: Generation,
 }
 
 impl Report {
@@ -35,7 +35,7 @@ impl Report {
         completed: usize,
         total: usize,
         subreports: Vec<Report>,
-        generation: Generation,
+        last_change: Generation,
     ) -> Self {
         let completed = Self::completed(completed, total);
         let total = Self::total(completed, total);
@@ -50,7 +50,7 @@ impl Report {
             fraction,
             is_indeterminate,
             subreports,
-            generation,
+            last_change,
         }
     }
 
