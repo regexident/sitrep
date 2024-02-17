@@ -26,6 +26,7 @@ Please make sure to add your changes to the appropriate categories:
 ### Changed
 
 - Renamed field `generation` of `Task` to `last_change`.
+- Renamed field `generation` of `Report` to `last_change`.
 
 ### Deprecated
 
