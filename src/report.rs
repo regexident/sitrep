@@ -55,15 +55,15 @@ impl Report {
     }
 
     /// Returns a pruned version with all subreports older than
-    /// `min_generation` removed, or `None` if `self` itself is older.
-    pub fn to_pruned(&self, min_generation: Generation) -> Option<Self> {
-        self.clone().into_pruned(min_generation)
+    /// `min_last_change` removed, or `None` if `self` itself is older.
+    pub fn to_pruned(&self, min_last_change: Generation) -> Option<Self> {
+        self.clone().into_pruned(min_last_change)
     }
 
     /// Consumes the `Report` and returns a pruned version with all subreports
-    /// older than `min_generation` removed, or `None` if `self` itself is older.
-    pub fn into_pruned(mut self, min_generation: Generation) -> Option<Self> {
-        if self.prune(min_generation) {
+    /// older than `min_last_change` removed, or `None` if `self` itself is older.
+    pub fn into_pruned(mut self, min_last_change: Generation) -> Option<Self> {
+        if self.prune(min_last_change) {
             Some(self)
         } else {
             {
@@ -72,11 +72,11 @@ impl Report {
         }
     }
 
-    fn prune(&mut self, min_generation: Generation) -> bool {
+    fn prune(&mut self, min_last_change: Generation) -> bool {
         self.subreports
-            .retain_mut(|report| report.prune(min_generation));
+            .retain_mut(|report| report.prune(min_last_change));
 
-        self.generation >= min_generation
+        self.last_change >= min_last_change
     }
 
     fn completed(completed: usize, total: usize) -> usize {
