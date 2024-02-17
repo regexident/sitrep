@@ -368,3 +368,29 @@ mod report {
         assert_eq!(grandchild_report.subreports.len(), 0);
     }
 }
+
+#[test]
+fn get() {
+    let (_observer, erased_observer) = SpyObserver::new();
+
+    let (parent, _weak_reporter) = Progress::new(Task::default(), erased_observer);
+    let child = Progress::new_with_parent(Task::default(), &parent);
+    let grandchild = Progress::new_with_parent(Task::default(), &child);
+
+    let missing_id = ProgressId(42);
+
+    assert!(parent.get(missing_id).is_none());
+    assert_eq!(parent.get(parent.id).unwrap().id, parent.id);
+    assert_eq!(parent.get(child.id).unwrap().id, child.id);
+    assert_eq!(parent.get(grandchild.id).unwrap().id, grandchild.id);
+
+    assert!(child.get(missing_id).is_none());
+    assert!(child.get(parent.id).is_none());
+    assert_eq!(child.get(child.id).unwrap().id, child.id);
+    assert_eq!(child.get(grandchild.id).unwrap().id, grandchild.id);
+
+    assert!(grandchild.get(missing_id).is_none());
+    assert!(grandchild.get(parent.id).is_none());
+    assert!(grandchild.get(child.id).is_none());
+    assert_eq!(grandchild.get(grandchild.id).unwrap().id, grandchild.id);
+}

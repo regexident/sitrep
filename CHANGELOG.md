@@ -21,6 +21,7 @@ Please make sure to add your changes to the appropriate categories:
 ### Added
 
 - Made `StdMpscObserver` impl `Send` + `Sync`.
+- Added `get()` method to `Progress` for accessing a specific (sub)progress (within the progress subtree) by its identifier.
 
 ### Changed
 

@@ -212,6 +212,23 @@ impl Progress {
         self.emit_update_event(&*state.observer);
     }
 
+    /// Returns the sub-progress with the given `id` within the tree, or `None` if it doesn't exist.
+    pub fn get(self: &Arc<Self>, id: ProgressId) -> Option<Arc<Progress>> {
+        if self.id == id {
+            return Some(Arc::clone(self));
+        }
+
+        let children = &self.relationships.read().children;
+
+        let child = children.get(&id);
+
+        if child.is_some() {
+            return child.cloned();
+        }
+
+        children.values().find_map(|progress| progress.get(id))
+    }
+
     /// Returns the associated unique ID.
     pub fn id(&self) -> ProgressId {
         self.id
