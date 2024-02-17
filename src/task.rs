@@ -16,7 +16,7 @@ pub struct Task {
     /// The task's total unit count.
     pub total: usize,
     /// The task's current generation.
-    pub(crate) generation: Generation,
+    pub(crate) last_change: Generation,
 }
 
 impl Task {

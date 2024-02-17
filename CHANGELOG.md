@@ -28,7 +28,7 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Changed
 
-- n/a
+- Renamed field `generation` of `Task` to `last_change`.
 
 ### Deprecated
 
