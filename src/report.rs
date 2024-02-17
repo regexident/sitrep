@@ -115,7 +115,7 @@ mod tests {
         fn prunes_self() {
             let report = Report {
                 progress_id: ProgressId::new_unique(),
-                generation: Generation(0),
+                last_change: Generation(0),
                 ..Default::default()
             };
 
@@ -133,21 +133,21 @@ mod tests {
                 subreports: vec![
                     Report {
                         progress_id: ProgressId::new_unique(),
-                        generation: Generation(1),
+                        last_change: Generation(1),
                         ..Default::default()
                     },
                     Report {
                         progress_id: child_id,
                         subreports: vec![Report {
                             progress_id: grand_child_id,
-                            generation: Generation(2),
+                            last_change: Generation(2),
                             ..Default::default()
                         }],
-                        generation: Generation(2),
+                        last_change: Generation(2),
                         ..Default::default()
                     },
                 ],
-                generation: Generation(2),
+                last_change: Generation(2),
                 ..Default::default()
             };
 
