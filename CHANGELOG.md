@@ -24,6 +24,7 @@ Please make sure to add your changes to the appropriate categories:
 - Added `get()` method to `Progress` for accessing a specific (sub)progress (within the progress subtree) by its identifier.
 - Made `ProgressId` impl `Default`.
 - Made `Report` impl `Default`.
+- Added `to_pruned()`/`into_pruned()` methods to `Report` for obtaining a pruned report containing only those sub-reports that were updated since a certain generation and thus need updating of their corresponding user-facing UI.
 
 ### Changed
 
