@@ -411,13 +411,13 @@ impl Progress {
 
         update_task(&mut guard.task);
 
-        let next_generation = Generation(guard.max_generation.fetch_add(1, Ordering::Relaxed));
+        let latest_change = Generation(guard.max_generation.fetch_add(1, Ordering::Relaxed));
 
-        if next_generation < guard.task.generation {
+        if latest_change < guard.task.last_change {
             guard.observer.observe(Event::GenerationOverflow);
         }
 
-        guard.task.generation = next_generation;
+        guard.task.last_change = latest_change;
 
         self.emit_update_event(&*guard.observer);
     }
@@ -475,7 +475,7 @@ impl Reporter for Progress {
         let generation = subreports
             .iter()
             .map(|report| report.generation)
-            .fold(task.generation, |max, item| max.max(item));
+            .fold(task.last_change, |max, item| max.max(item));
 
         Report::new(progress_id, label, completed, total, subreports, generation)
     }
