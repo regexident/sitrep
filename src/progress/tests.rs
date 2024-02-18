@@ -217,7 +217,7 @@ mod message {
             .into_iter()
             .map(|priority| MessageEvent {
                 id: progress.id(),
-                message: message.to_owned(),
+                message: message.into(),
                 priority,
             })
             .collect();
