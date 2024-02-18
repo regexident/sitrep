@@ -224,6 +224,17 @@ impl Progress {
         self.relationships.read().parent.upgrade()
     }
 
+    /// Returns the progress' children.
+    pub fn children(self: &Arc<Self>) -> impl Iterator<Item = Arc<Self>> {
+        self.relationships
+            .read()
+            .children
+            .values()
+            .map(Arc::clone)
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+
     /// Returns the sub-progress with the given `id` within the tree, or `None` if it doesn't exist.
     pub fn get(self: &Arc<Self>, id: ProgressId) -> Option<Arc<Progress>> {
         if self.id == id {
