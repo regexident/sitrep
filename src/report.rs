@@ -56,6 +56,11 @@ impl Report {
         }
     }
 
+    /// Returns the last change's generation.
+    pub fn last_change(&self) -> Generation {
+        self.last_change
+    }
+
     /// Returns a pruned version with all subreports older than
     /// `min_last_change` removed, or `None` if `self` itself is older.
     pub fn to_pruned(&self, min_last_change: Generation) -> Option<Self> {

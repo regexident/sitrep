@@ -26,6 +26,7 @@ Please make sure to add your changes to the appropriate categories:
 - Made `Report` impl `Default`.
 - Added `to_pruned()`/`into_pruned()` methods to `Report` for obtaining a pruned report containing only those sub-reports that were updated since a certain generation and thus need updating of their corresponding user-facing UI.
 - Added `as_raw()` method to `Generation` for accessing the raw internal generational counter value.
+- Added `last_change()` getter method to `Report` for accessing its last change's generation.
 
 ### Changed
 
