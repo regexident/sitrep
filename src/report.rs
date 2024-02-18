@@ -1,5 +1,7 @@
 //! A progress' report.
 
+use std::borrow::Cow;
+
 use crate::{task::Generation, ProgressId};
 
 /// A progress' report.
@@ -8,7 +10,7 @@ pub struct Report {
     /// The associated progress' identifier.
     pub progress_id: ProgressId,
     /// The associated progress' label.
-    pub label: Option<String>,
+    pub label: Option<Cow<'static, str>>,
     /// The number of accumulative completed units of work
     /// (i.e. including sub-reports' completed units).
     pub completed: usize,
@@ -31,7 +33,7 @@ pub struct Report {
 impl Report {
     pub(crate) fn new(
         progress_id: ProgressId,
-        label: Option<String>,
+        label: Option<Cow<'static, str>>,
         completed: usize,
         total: usize,
         subreports: Vec<Report>,

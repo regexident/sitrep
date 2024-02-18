@@ -16,7 +16,7 @@ fn main() {
 
     // The sending end of the progress report:
     let worker_handle = thread::spawn(move || {
-        parent.set_label("Crunching numbers ...".to_owned());
+        parent.set_label(Some("Crunching numbers ...".into()));
 
         for i in 0..3 {
             let child = Progress::new_with_parent(Task::default(), &parent);
@@ -24,7 +24,7 @@ fn main() {
             let total = 100;
             child.set_total(total);
 
-            child.set_label(format!("{}..{}", i * total, i * total + total));
+            child.set_label(Some(format!("{}..{}", i * total, i * total + total).into()));
 
             for completed in 1..=total {
                 thread::sleep(Duration::from_millis(100));

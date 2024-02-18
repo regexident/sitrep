@@ -31,6 +31,8 @@ Please make sure to add your changes to the appropriate categories:
 - Renamed field `generation` of `Task` to `last_change`.
 - Renamed field `generation` of `Report` to `last_change`.
 - Rename field `max_generation` of `Progress` to `last_tree_change`.
+- Changed type of field `label` of `Task` from `Option<String>` to `Option<Cow<'static, str>>`.
+- Changed type of field `label` of `Report` from `Option<String>` to `Option<Cow<'static, str>>`.
 
 ### Deprecated
 
@@ -46,7 +48,7 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Performance
 
-- n/a
+- Improved performance of `Reporter.report()` for `&'static str` task labels (instead of `String`).
 
 ### Security
 
