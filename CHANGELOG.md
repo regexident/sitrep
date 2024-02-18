@@ -22,6 +22,7 @@ Please make sure to add your changes to the appropriate categories:
 
 - Added enum `State` and corresponding field `state` to `Task` and `Report`.
 - Added `NopObserver` implementation for ignoring events.
+- Added `as_raw()` getter method to `ProgressId`.
 
 ### Changed
 

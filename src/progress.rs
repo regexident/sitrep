@@ -35,6 +35,11 @@ impl ProgressId {
     pub(crate) fn new_unique() -> Self {
         Self(NEXT_ID.fetch_add(1, Ordering::SeqCst))
     }
+
+    /// Returns the raw internal identifier value.
+    pub fn as_raw(&self) -> usize {
+        self.0
+    }
 }
 
 /// Types for observing events of a progress.
