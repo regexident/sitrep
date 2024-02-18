@@ -1,6 +1,7 @@
 //! A progress.
 
 use std::{
+    borrow::Cow,
     collections::HashMap,
     sync::{
         atomic::{AtomicUsize, Ordering},
@@ -355,7 +356,7 @@ impl Progress {
     /// When making multiple changes prefer to use the `update(…)` method over multiple
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
-    pub fn set_label(self: &Arc<Self>, label: impl Into<Option<String>>) {
+    pub fn set_label(self: &Arc<Self>, label: impl Into<Option<Cow<'static, str>>>) {
         self.update(|task| task.label = label.into());
     }
 

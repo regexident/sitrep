@@ -1,5 +1,7 @@
 //! A progress' associated task.
 
+use std::borrow::Cow;
+
 /// A monotonically increasing generation counter.
 ///
 /// Specifies the generation at which a value was last changed.
@@ -10,7 +12,7 @@ pub struct Generation(pub(crate) usize);
 #[derive(Clone, PartialEq, Default, Debug)]
 pub struct Task {
     /// The task's label.
-    pub label: Option<String>,
+    pub label: Option<Cow<'static, str>>,
     /// The task's completed unit count.
     pub completed: usize,
     /// The task's total unit count.
@@ -23,7 +25,7 @@ impl Task {
     /// Builder-style method for setting the task's initial label.
     ///
     /// The default label is `None`.
-    pub fn label(mut self, label: impl Into<String>) -> Self {
+    pub fn label(mut self, label: impl Into<Cow<'static, str>>) -> Self {
         self.label = Some(label.into());
         self
     }

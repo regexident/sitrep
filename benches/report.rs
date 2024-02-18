@@ -13,7 +13,7 @@ pub fn stand_alone(c: &mut Criterion) {
 
         // Make sure we actually have stuff to compute for the report:
         progress.update(|task: &mut Task| {
-            task.label = Some("label".to_owned());
+            task.label = Some("label".into());
             task.completed = 1;
             task.total = 10;
         });
@@ -37,7 +37,7 @@ pub fn hierarchical(c: &mut Criterion) {
         // Make sure we actually have stuff to compute for the report:
         for progress in progresses.iter() {
             progress.update(|task: &mut Task| {
-                task.label = Some("label".to_owned());
+                task.label = Some("label".into());
                 task.completed = 1;
                 task.total = 10;
             });
