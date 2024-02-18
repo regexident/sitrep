@@ -28,6 +28,7 @@ Please make sure to add your changes to the appropriate categories:
 - Added `as_raw()` method to `Generation` for accessing the raw internal generational counter value.
 - Added `last_change()` getter method to `Report` for accessing its last change's generation.
 - Added `parent()` getter to `Progress`.
+- Added `children()` getter to `Progress`.
 
 ### Changed
 
