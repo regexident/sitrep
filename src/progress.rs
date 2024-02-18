@@ -218,6 +218,11 @@ impl Progress {
         self.emit_update_event(&*state.observer);
     }
 
+    /// Returns the progress' parent, or `None` if `self` has no parent.
+    pub fn parent(self: &Arc<Self>) -> Option<Arc<Self>> {
+        self.relationships.read().parent.upgrade()
+    }
+
     /// Returns the sub-progress with the given `id` within the tree, or `None` if it doesn't exist.
     pub fn get(self: &Arc<Self>, id: ProgressId) -> Option<Arc<Progress>> {
         if self.id == id {
