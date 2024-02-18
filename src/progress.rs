@@ -219,6 +219,15 @@ impl Progress {
         self.emit_update_event(&*state.observer);
     }
 
+    /// Detaches `self` from its parent, giving it a new `observer`.
+    pub fn detach_from_parent(self: &Arc<Self>, observer: Arc<dyn Observer>) {
+        let Some(parent) = self.relationships.read().parent.upgrade() else {
+            return;
+        };
+
+        parent.detach_child(self, observer)
+    }
+
     /// Returns the progress' parent, or `None` if `self` has no parent.
     pub fn parent(self: &Arc<Self>) -> Option<Arc<Self>> {
         self.relationships.read().parent.upgrade()

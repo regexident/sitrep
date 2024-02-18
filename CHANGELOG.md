@@ -29,6 +29,7 @@ Please make sure to add your changes to the appropriate categories:
 - Added `last_change()` getter method to `Report` for accessing its last change's generation.
 - Added `parent()` getter to `Progress`.
 - Added `children()` getter to `Progress`.
+- Added method `detach_from_parent()` to `Progress` as a counter-part for `detach_child()`.
 
 ### Changed
 
