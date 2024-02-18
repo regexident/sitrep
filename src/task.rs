@@ -8,6 +8,13 @@ use std::borrow::Cow;
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default, Debug)]
 pub struct Generation(pub(crate) usize);
 
+impl Generation {
+    /// Returns the raw internal generational counter value.
+    pub fn as_raw(&self) -> usize {
+        self.0
+    }
+}
+
 /// The task associated with a given progress object.
 #[derive(Clone, PartialEq, Default, Debug)]
 pub struct Task {
