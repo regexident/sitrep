@@ -204,19 +204,12 @@ impl Progress {
 
     /// Detaches `child` from `self`, giving it a new `observer`.
     pub fn detach_child(self: &Arc<Self>, child: &Arc<Self>, observer: Arc<dyn Observer>) {
-        debug_assert!(
+        assert!(
             self.relationships.read().children.contains_key(&child.id),
             "not a child"
         );
 
-        child.state.write().observer = observer;
-        child.relationships.write().parent = Weak::new();
-
-        self.relationships.write().children.remove(&child.id);
-
-        let state = self.state.read();
-
-        self.emit_update_event(&*state.observer);
+        child.detach_from_parent(observer);
     }
 
     /// Detaches `self` from its parent, giving it a new `observer`.
@@ -225,7 +218,14 @@ impl Progress {
             return;
         };
 
-        parent.detach_child(self, observer)
+        self.state.write().observer = observer;
+        self.relationships.write().parent = Weak::new();
+
+        parent.relationships.write().children.remove(&self.id);
+
+        let state = parent.state.read();
+
+        parent.emit_update_event(&*state.observer);
     }
 
     /// Returns the progress' parent, or `None` if `self` has no parent.
