@@ -246,7 +246,7 @@ impl Progress {
     /// See [`message()`](method@message) for more info (e.g. filtering).
     pub fn error<T>(self: &Arc<Self>, message: impl FnOnce() -> T)
     where
-        T: Into<String>,
+        T: Into<Cow<'static, str>>,
     {
         self.message(message, PriorityLevel::Error);
     }
@@ -256,7 +256,7 @@ impl Progress {
     /// See [`message()`](method@message) for more info (e.g. filtering).
     pub fn warn<T>(self: &Arc<Self>, message: impl FnOnce() -> T)
     where
-        T: Into<String>,
+        T: Into<Cow<'static, str>>,
     {
         self.message(message, PriorityLevel::Warn);
     }
@@ -266,7 +266,7 @@ impl Progress {
     /// See [`message()`](method@message) for more info (e.g. filtering).
     pub fn debug<T>(self: &Arc<Self>, message: impl FnOnce() -> T)
     where
-        T: Into<String>,
+        T: Into<Cow<'static, str>>,
     {
         self.message(message, PriorityLevel::Debug);
     }
@@ -276,7 +276,7 @@ impl Progress {
     /// See [`message()`](method@message) for more info (e.g. filtering).
     pub fn info<T>(self: &Arc<Self>, message: impl FnOnce() -> T)
     where
-        T: Into<String>,
+        T: Into<Cow<'static, str>>,
     {
         self.message(message, PriorityLevel::Info);
     }
@@ -286,7 +286,7 @@ impl Progress {
     /// See [`message()`](method@message) for more info (e.g. filtering).
     pub fn trace<T>(self: &Arc<Self>, message: impl FnOnce() -> T)
     where
-        T: Into<String>,
+        T: Into<Cow<'static, str>>,
     {
         self.message(message, PriorityLevel::Trace);
     }
@@ -304,7 +304,7 @@ impl Progress {
     /// ```
     pub fn message<T>(self: &Arc<Self>, message: impl FnOnce() -> T, level: PriorityLevel)
     where
-        T: Into<String>,
+        T: Into<Cow<'static, str>>,
     {
         if level < self.min_priority_level() {
             return;
@@ -432,7 +432,7 @@ impl Progress {
     fn emit_message_event(
         self: &Arc<Self>,
         observer: &dyn Observer,
-        message: String,
+        message: Cow<'static, str>,
         priority: PriorityLevel,
     ) {
         observer.observe(Event::Message(MessageEvent {

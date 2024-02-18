@@ -1,5 +1,7 @@
 //! A progress event.
 
+use std::borrow::Cow;
+
 use crate::{PriorityLevel, ProgressId};
 
 /// A progress event.
@@ -28,7 +30,7 @@ pub struct MessageEvent {
     /// The associated progress' identifier.
     pub id: ProgressId,
     /// The posted message.
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// The message's priority level.
     pub priority: PriorityLevel,
 }
