@@ -518,7 +518,7 @@ impl Drop for Progress {
         self.state
             .read()
             .observer
-            .observe(Event::Removed(RemovalEvent { id: self.id() }));
+            .observe(Event::Detachment(RemovalEvent { id: self.id() }));
     }
 }
 

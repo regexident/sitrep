@@ -12,7 +12,7 @@ pub enum Event {
     /// A progress has posted a message.
     Message(MessageEvent),
     /// A progress has been removed.
-    Removed(RemovalEvent),
+    Detachment(RemovalEvent),
     /// The generation counter has overflown.
     GenerationOverflow,
 }
