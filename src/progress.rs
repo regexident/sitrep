@@ -16,7 +16,7 @@ use crate::{
     priority::{global_min_priority_level, AtomicPriorityLevel},
     report::Report,
     task::{State, Task},
-    Generation, MessageEvent, PriorityLevel, RemovalEvent, UpdateEvent,
+    DetachmentEvent, Generation, MessageEvent, PriorityLevel, UpdateEvent,
 };
 
 static NEXT_ID: AtomicUsize = AtomicUsize::new(0);
@@ -518,7 +518,7 @@ impl Drop for Progress {
         self.state
             .read()
             .observer
-            .observe(Event::Detachment(RemovalEvent { id: self.id() }));
+            .observe(Event::Detachment(DetachmentEvent { id: self.id() }));
     }
 }
 
