@@ -48,11 +48,11 @@ impl SpyObserver {
             .collect()
     }
 
-    fn removed_events(&self) -> Vec<RemovalEvent> {
+    fn detachment_events(&self) -> Vec<RemovalEvent> {
         self.events()
             .into_iter()
             .filter_map(|event| match event {
-                Event::Removed(event) => Some(event.clone()),
+                Event::Detachment(event) => Some(event.clone()),
                 _ => None,
             })
             .collect()
