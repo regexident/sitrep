@@ -249,6 +249,11 @@ impl Progress {
             .into_iter()
     }
 
+    /// Returns the child with the given `id` within the tree, or `None` if it doesn't exist.
+    pub fn child(self: &Arc<Self>, id: ProgressId) -> Option<Arc<Progress>> {
+        self.relationships.read().children.get(&id).cloned()
+    }
+
     /// Returns the sub-progress with the given `id` within the tree, or `None` if it doesn't exist.
     pub fn get(self: &Arc<Self>, id: ProgressId) -> Option<Arc<Progress>> {
         if self.id == id {
