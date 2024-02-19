@@ -390,6 +390,11 @@ impl Progress {
         self.update(|task| task.label = label.into());
     }
 
+    /// Returns the task's label to `label`.
+    pub fn label(self: &Arc<Self>) -> Option<Cow<'static, str>> {
+        self.state.read().task.label.clone()
+    }
+
     /// Increments the task's completed unit count by `1`.
     ///
     /// # Performance
@@ -423,6 +428,11 @@ impl Progress {
         self.update(|task| task.completed = completed);
     }
 
+    /// Returns the task's completed unit count.
+    pub fn completed(self: &Arc<Self>) -> usize {
+        self.state.read().task.completed
+    }
+
     /// Sets the task's total unit count to `total`.
     ///
     /// A `self.total` of `0` results in an indeterminate task progress.
@@ -436,6 +446,11 @@ impl Progress {
         self.update(|task| task.total = total);
     }
 
+    /// Returns the task's total unit count.
+    pub fn total(self: &Arc<Self>) -> usize {
+        self.state.read().task.total
+    }
+
     /// Sets the task's state to `state`.
     ///
     /// # Performance
@@ -445,6 +460,11 @@ impl Progress {
     /// while `progress.update(|task| … )` only emits a single event at the very end.
     pub fn set_state(self: &Arc<Self>, state: State) {
         self.update(|task| task.state = state);
+    }
+
+    /// Returns the task's state.
+    pub fn state(self: &Arc<Self>) -> State {
+        self.state.read().task.state
     }
 
     /// Updates the associated task, emitting a corresponding event afterwards.
