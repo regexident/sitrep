@@ -41,6 +41,10 @@ pub struct Task {
     pub total: usize,
     /// The task's state.
     pub state: State,
+    /// Whether or not the task is cancelable.
+    pub is_cancelable: bool,
+    /// Whether or not the task is pausable.
+    pub is_pausable: bool,
     /// The task's current generation.
     pub(crate) last_change: Generation,
 }
@@ -69,6 +73,22 @@ impl Task {
     /// A `self.total` of `0` results in an indeterminate task progress.
     pub fn total(mut self, total: usize) -> Self {
         self.total = total;
+        self
+    }
+
+    /// Builder-style method for marking the task as being cancelable.
+    ///
+    /// The default is `false` (i.e. non-cancelable).
+    pub fn cancelable(mut self) -> Self {
+        self.is_cancelable = true;
+        self
+    }
+
+    /// Builder-style method for marking the task as being pausable.
+    ///
+    /// The default is `false` (i.e. non-pausable).
+    pub fn pausable(mut self) -> Self {
+        self.is_pausable = true;
         self
     }
 
