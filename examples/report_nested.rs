@@ -4,9 +4,7 @@ use std::{
     time::Duration,
 };
 
-use sitrep::{
-    Event, MessageEvent, Progress, RemovalEvent, Reporter, StdMpscObserver, Task, UpdateEvent,
-};
+use sitrep::{Event, Progress, Reporter, StdMpscObserver, Task, UpdateEvent};
 
 fn main() {
     let (sender, receiver) = mpsc::channel();
