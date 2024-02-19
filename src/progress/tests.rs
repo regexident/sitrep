@@ -174,6 +174,34 @@ mod no_reference_cycles {
     }
 }
 
+mod removal {
+    use super::*;
+
+    #[test]
+    fn detach_from_parent() {
+        let (observer, erased_observer) = SpyObserver::new();
+
+        let (parent, _reporter) = Progress::new(Task::default(), erased_observer);
+        let child = Progress::new_with_parent(Task::default(), &parent);
+
+        child.detach_from_parent(Arc::new(NopObserver));
+
+        assert_eq!(observer.detachment_events().len(), 1);
+    }
+
+    #[test]
+    fn detach_child() {
+        let (observer, erased_observer) = SpyObserver::new();
+
+        let (parent, _reporter) = Progress::new(Task::default(), erased_observer);
+        let child = Progress::new_with_parent(Task::default(), &parent);
+
+        parent.detach_child(&child, Arc::new(NopObserver));
+
+        assert_eq!(observer.detachment_events().len(), 1);
+    }
+}
+
 mod message {
     use super::*;
 

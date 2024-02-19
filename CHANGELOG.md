@@ -30,6 +30,7 @@ Please make sure to add your changes to the appropriate categories:
 
 - Renamed `Event::Removed` to `Event::Detachment`.
 - Renamed `RemovalEvent` to `DetachmentEvent`.
+- Made `Progress` emit `Event::Removed` only when being detached from a parent.
 
 ### Deprecated
 
