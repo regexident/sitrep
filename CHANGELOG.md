@@ -20,26 +20,11 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Added
 
-- Made `StdMpscObserver` impl `Send` + `Sync`.
-- Added `get()` method to `Progress` for accessing a specific (sub)progress (within the progress subtree) by its identifier.
-- Made `ProgressId` impl `Default`.
-- Made `Report` impl `Default`.
-- Added `to_pruned()`/`into_pruned()` methods to `Report` for obtaining a pruned report containing only those sub-reports that were updated since a certain generation and thus need updating of their corresponding user-facing UI.
-- Added `as_raw()` method to `Generation` for accessing the raw internal generational counter value.
-- Added `last_change()` getter method to `Report` for accessing its last change's generation.
-- Added `parent()` getter to `Progress`.
-- Added `children()` getter to `Progress`.
-- Added method `detach_from_parent()` to `Progress` as a counter-part for `detach_child()`.
 - Added enum `State` and corresponding field `state` to `Task` and `Report`.
 
 ### Changed
 
-- Renamed field `generation` of `Task` to `last_change`.
-- Renamed field `generation` of `Report` to `last_change`.
-- Rename field `max_generation` of `Progress` to `last_tree_change`.
-- Changed type of field `label` of `Task` from `Option<String>` to `Option<Cow<'static, str>>`.
-- Changed type of field `label` of `Report` from `Option<String>` to `Option<Cow<'static, str>>`.
-- Changed type of field `message` of `MessageEvent` from `String` to `Cow<'static, str>`.
+- n/a
 
 ### Deprecated
 
@@ -51,12 +36,11 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Fixed
 
-- n/A
+- n/a
 
 ### Performance
 
-- Improved performance of `Reporter.report()` for `&'static str` task labels (instead of `String`).
-- Improved performance of `Progress.message()` for `&'static str` messages (instead of `String`).
+- n/a
 
 ### Security
 
