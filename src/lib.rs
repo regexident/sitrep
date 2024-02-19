@@ -13,7 +13,7 @@ pub use self::{
     event::{DetachmentEvent, Event, MessageEvent, UpdateEvent},
     observer::{NopObserver, StdMpscObserver},
     priority::PriorityLevel,
-    progress::{Observer, Progress, ProgressId, Reporter},
+    progress::{Controller, Observer, Progress, ProgressId, Reporter},
     report::Report,
     task::{Generation, State, Task},
 };

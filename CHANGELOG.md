@@ -25,6 +25,7 @@ Please make sure to add your changes to the appropriate categories:
 - Added `as_raw()` getter method to `ProgressId`.
 - Added `label()`, `completed()`, `total()` & `state()` getter methods to `Progress`.
 - Added `child()` accessor method to `Progress`.
+- Added trait `Controller`.
 
 ### Changed
 
