@@ -54,6 +54,21 @@ pub trait Reporter: Send + Sync {
     fn report(self: &Arc<Self>) -> Report;
 }
 
+/// Types for controlling progress-tracked tasks.
+pub trait Controller: Send + Sync {
+    /// Sets the state of the corresponding `Progress` task
+    /// (and all its running sub-tasks) to `Paused`, recursively.
+    fn pause(self: &Arc<Self>);
+
+    /// Sets the state of the corresponding `Progress` task
+    /// (and all its paused sub-tasks) to `Running`, recursively.
+    fn resume(self: &Arc<Self>);
+
+    /// Sets the state of the corresponding `Progress` task
+    /// (and all its running/paused sub-tasks) to `Canceled`, recursively.
+    fn cancel(self: &Arc<Self>);
+}
+
 /// The progress' state.
 struct ProgressState {
     /// An associated task.
