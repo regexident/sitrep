@@ -133,7 +133,7 @@ impl Progress {
 
         let parent_state = parent.state.read();
 
-        parent.emit_update_event(&*parent_state.observer);
+        parent.emit_update_event(&*parent_state.observer, parent.id);
 
         child
     }
@@ -170,31 +170,30 @@ impl Progress {
 
     /// Attaches `child` to `self`, returning the `child's` own and now no longer used `Observer`.
     pub fn attach_child(self: &Arc<Self>, child: &Arc<Self>) -> Arc<dyn Observer> {
-        let parent_state = self.state.read();
-
         let last_tree_change = {
-            let child_state = child.state.read();
-
-            let parent_last_tree_change = parent_state.last_tree_change.load(Ordering::Relaxed);
-            let child_last_tree_change = child_state.last_tree_change.load(Ordering::Relaxed);
+            let parent_last_tree_change =
+                self.state.read().last_tree_change.load(Ordering::Relaxed);
+            let child_last_tree_change =
+                child.state.read().last_tree_change.load(Ordering::Relaxed);
 
             parent_last_tree_change.max(child_last_tree_change)
         };
 
         // Bump the parent's generation, if necessary:
-        parent_state
+        self.state
+            .read()
             .last_tree_change
             .store(last_tree_change, Ordering::SeqCst);
 
-        let mut child_state = child.state.write();
-
-        // Children share the generation of their parent:
-        child_state.last_tree_change = Arc::clone(&parent_state.last_tree_change);
-
-        // Make sure the child uses the parent's observer from now on:
         let observer = {
-            let parent_observer = parent_state.observer.clone();
-            std::mem::replace(&mut child_state.observer, parent_observer)
+            let parent_state = self.state.read();
+            let mut child_state = child.state.write();
+
+            // Children share the generation of their parent:
+            child_state.last_tree_change = Arc::clone(&self.state.read().last_tree_change);
+
+            // Make sure the child uses the parent's observer from now on:
+            std::mem::replace(&mut child_state.observer, parent_state.observer.clone())
         };
 
         self.relationships
@@ -202,7 +201,9 @@ impl Progress {
             .children
             .insert(child.id(), Arc::clone(child));
 
-        self.emit_update_event(&*parent_state.observer);
+        self.bump_last_change();
+
+        self.emit_update_event(&*self.state.read().observer, self.id);
 
         observer
     }
@@ -228,9 +229,12 @@ impl Progress {
 
         parent.relationships.write().children.remove(&self.id);
 
+        parent.bump_last_change();
+
         let state = parent.state.read();
 
-        parent.emit_update_event(&*state.observer);
+        parent.emit_removed_event(&*state.observer, self.id);
+        parent.emit_update_event(&*state.observer, parent.id);
     }
 
     /// Returns the progress' parent, or `None` if `self` has no parent.
@@ -480,9 +484,15 @@ impl Progress {
     /// individual calls to setters as those would emit one event per setter call,
     /// while `progress.update(|task| … )` only emits a single event at the very end.
     pub fn update(self: &Arc<Self>, update_task: impl FnOnce(&mut Task)) {
-        let guard = &mut self.state.write();
+        update_task(&mut self.state.write().task);
 
-        update_task(&mut guard.task);
+        self.bump_last_change();
+
+        self.emit_update_event(&*self.state.read().observer, self.id);
+    }
+
+    fn bump_last_change(self: &Arc<Self>) {
+        let guard = &mut self.state.write();
 
         let latest_change = Generation(guard.last_tree_change.fetch_add(1, Ordering::Relaxed));
 
@@ -491,8 +501,6 @@ impl Progress {
         }
 
         guard.task.last_change = latest_change;
-
-        self.emit_update_event(&*guard.observer);
     }
 
     fn emit_message_event(
@@ -508,17 +516,12 @@ impl Progress {
         }));
     }
 
-    fn emit_update_event(self: &Arc<Self>, observer: &dyn Observer) {
-        observer.observe(Event::Update(UpdateEvent { id: self.id() }));
+    fn emit_update_event(self: &Arc<Self>, observer: &dyn Observer, id: ProgressId) {
+        observer.observe(Event::Update(UpdateEvent { id }));
     }
-}
 
-impl Drop for Progress {
-    fn drop(&mut self) {
-        self.state
-            .read()
-            .observer
-            .observe(Event::Detachment(DetachmentEvent { id: self.id() }));
+    fn emit_removed_event(self: &Arc<Self>, observer: &dyn Observer, id: ProgressId) {
+        observer.observe(Event::Detachment(DetachmentEvent { id }));
     }
 }
 
