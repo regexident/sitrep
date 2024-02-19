@@ -65,7 +65,7 @@ jobs:
         with:
           toolchain: stable
           components: clippy
-      - run: cargo clippy -- -D warnings
+      - run: cargo clippy --workspace --all-targets --all-features --tests --examples --benches -- -D warnings
 
   minimal_versions:
     name: Compile and test with minimal versions
