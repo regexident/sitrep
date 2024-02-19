@@ -56,6 +56,10 @@ pub trait Reporter: Send + Sync {
 
 /// Types for controlling progress-tracked tasks.
 pub trait Controller: Send + Sync {
+    /// Returns the sub-progress with the given `id` within the tree,
+    /// or `None` if it doesn't exist.
+    fn get(self: &Arc<Self>, progress_id: ProgressId) -> Option<Arc<Self>>;
+
     /// Sets the state of the corresponding `Progress` task
     /// (and all its running sub-tasks) to `Paused`, recursively.
     fn pause(self: &Arc<Self>);
@@ -271,23 +275,6 @@ impl Progress {
     /// Returns the child with the given `id` within the tree, or `None` if it doesn't exist.
     pub fn child(self: &Arc<Self>, id: ProgressId) -> Option<Arc<Progress>> {
         self.relationships.read().children.get(&id).cloned()
-    }
-
-    /// Returns the sub-progress with the given `id` within the tree, or `None` if it doesn't exist.
-    pub fn get(self: &Arc<Self>, id: ProgressId) -> Option<Arc<Progress>> {
-        if self.id == id {
-            return Some(Arc::clone(self));
-        }
-
-        let children = &self.relationships.read().children;
-
-        let child = children.get(&id);
-
-        if child.is_some() {
-            return child.cloned();
-        }
-
-        children.values().find_map(|progress| progress.get(id))
     }
 
     /// Returns the associated unique ID.
@@ -583,6 +570,24 @@ impl Reporter for Progress {
 }
 
 impl Controller for Progress {
+    fn get(self: &Arc<Self>, progress_id: ProgressId) -> Option<Arc<Self>> {
+        if self.id == progress_id {
+            return Some(Arc::clone(self));
+        }
+
+        let children = &self.relationships.read().children;
+
+        let child = children.get(&progress_id);
+
+        if child.is_some() {
+            return child.cloned();
+        }
+
+        children
+            .values()
+            .find_map(|progress| progress.get(progress_id))
+    }
+
     fn pause(self: &Arc<Self>) {
         let guard = &mut self.state.write();
 
