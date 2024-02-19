@@ -15,7 +15,7 @@ pub use self::{
     priority::PriorityLevel,
     progress::{Observer, Progress, ProgressId, Reporter},
     report::Report,
-    task::{Generation, Task},
+    task::{Generation, State, Task},
 };
 
 #[cfg(any(test, feature = "test-utils"))]

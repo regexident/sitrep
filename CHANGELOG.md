@@ -30,6 +30,7 @@ Please make sure to add your changes to the appropriate categories:
 - Added `parent()` getter to `Progress`.
 - Added `children()` getter to `Progress`.
 - Added method `detach_from_parent()` to `Progress` as a counter-part for `detach_child()`.
+- Added enum `State` and corresponding field `state` to `Task` and `Report`.
 
 ### Changed
 
