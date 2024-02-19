@@ -26,6 +26,7 @@ Please make sure to add your changes to the appropriate categories:
 - Added `label()`, `completed()`, `total()` & `state()` getter methods to `Progress`.
 - Added `child()` accessor method to `Progress`.
 - Added trait `Controller`.
+- Added `is_cancelable()` & `is_pausable()` to `Controller`.
 
 ### Changed
 

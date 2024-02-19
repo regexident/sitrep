@@ -60,6 +60,12 @@ pub trait Controller: Send + Sync {
     /// or `None` if it doesn't exist.
     fn get(self: &Arc<Self>, progress_id: ProgressId) -> Option<Arc<Self>>;
 
+    /// Returns `true` if the task is cancelable, otherwise `false`.
+    fn is_cancelable(self: &Arc<Self>) -> bool;
+
+    /// Returns `true` if the task is pausable, otherwise `false`.
+    fn is_pausable(self: &Arc<Self>) -> bool;
+
     /// Sets the state of the corresponding `Progress` task
     /// (and all its running sub-tasks) to `Paused`, recursively.
     fn pause(self: &Arc<Self>);
@@ -589,6 +595,14 @@ impl Controller for Progress {
         children
             .values()
             .find_map(|progress| progress.get(progress_id))
+    }
+
+    fn is_cancelable(self: &Arc<Self>) -> bool {
+        self.state.read().task.is_cancelable
+    }
+
+    fn is_pausable(self: &Arc<Self>) -> bool {
+        self.state.read().task.is_pausable
     }
 
     fn pause(self: &Arc<Self>) {
