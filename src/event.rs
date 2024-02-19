@@ -12,7 +12,7 @@ pub enum Event {
     /// A progress has posted a message.
     Message(MessageEvent),
     /// A progress has been removed.
-    Detachment(RemovalEvent),
+    Detachment(DetachmentEvent),
     /// The generation counter has overflown.
     GenerationOverflow,
 }
@@ -37,7 +37,7 @@ pub struct MessageEvent {
 
 /// A update event.
 #[derive(Clone, Eq, PartialEq, Debug)]
-pub struct RemovalEvent {
+pub struct DetachmentEvent {
     /// The associated progress' identifier.
     pub id: ProgressId,
 }

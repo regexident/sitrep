@@ -15,7 +15,7 @@ Frontend-agnostic progress reporting.
 use std::{sync::{mpsc, Arc}, thread, time::Duration};
 
 use sitrep::{
-    Event, MessageEvent, Progress, RemovalEvent, Reporter, StdMpscObserver, Task, UpdateEvent,
+    Event, MessageEvent, Progress, DetachmentEvent, Reporter, StdMpscObserver, Task, UpdateEvent,
 };
 
 fn main() {

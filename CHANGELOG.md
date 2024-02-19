@@ -29,6 +29,7 @@ Please make sure to add your changes to the appropriate categories:
 ### Changed
 
 - Renamed `Event::Removed` to `Event::Detachment`.
+- Renamed `RemovalEvent` to `DetachmentEvent`.
 
 ### Deprecated
 
