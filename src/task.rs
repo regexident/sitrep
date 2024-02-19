@@ -15,6 +15,21 @@ impl Generation {
     }
 }
 
+/// A task's state.
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Default, Debug)]
+#[repr(u8)]
+pub enum State {
+    /// A running task.
+    #[default]
+    Running,
+    /// A paused task.
+    Paused,
+    /// A finished task.
+    Finished,
+    /// A cancelled task.
+    Canceled,
+}
+
 /// The task associated with a given progress object.
 #[derive(Clone, PartialEq, Default, Debug)]
 pub struct Task {
@@ -24,6 +39,8 @@ pub struct Task {
     pub completed: usize,
     /// The task's total unit count.
     pub total: usize,
+    /// The task's state.
+    pub state: State,
     /// The task's current generation.
     pub(crate) last_change: Generation,
 }

@@ -2,7 +2,10 @@
 
 use std::borrow::Cow;
 
-use crate::{task::Generation, ProgressId};
+use crate::{
+    task::{Generation, State},
+    ProgressId,
+};
 
 /// A progress' report.
 #[derive(Clone, PartialEq, Default, Debug)]
@@ -22,6 +25,8 @@ pub struct Report {
     pub fraction: f64,
     /// A boolean value that indicates whether the tracked progress is indeterminate.
     pub is_indeterminate: bool,
+    /// The associated progress' state.
+    pub state: State,
     /// The reports of the associated progress' children.
     pub subreports: Vec<Report>,
 
@@ -36,6 +41,7 @@ impl Report {
         label: Option<Cow<'static, str>>,
         completed: usize,
         total: usize,
+        state: State,
         subreports: Vec<Report>,
         last_change: Generation,
     ) -> Self {
@@ -51,6 +57,7 @@ impl Report {
             total,
             fraction,
             is_indeterminate,
+            state,
             subreports,
             last_change,
         }

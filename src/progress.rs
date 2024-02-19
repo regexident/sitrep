@@ -15,7 +15,7 @@ use crate::{
     event::Event,
     priority::{global_min_priority_level, AtomicPriorityLevel},
     report::Report,
-    task::Task,
+    task::{State, Task},
     Generation, MessageEvent, PriorityLevel, RemovalEvent, UpdateEvent,
 };
 
@@ -431,6 +431,17 @@ impl Progress {
         self.update(|task| task.total = total);
     }
 
+    /// Sets the task's state to `state`.
+    ///
+    /// # Performance
+    ///
+    /// When making multiple changes prefer to use the `update(…)` method over multiple
+    /// individual calls to setters as those would emit one event per setter call,
+    /// while `progress.update(|task| … )` only emits a single event at the very end.
+    pub fn set_state(self: &Arc<Self>, state: State) {
+        self.update(|task| task.state = state);
+    }
+
     /// Updates the associated task, emitting a corresponding event afterwards.
     ///
     /// # Performance
@@ -504,6 +515,8 @@ impl Reporter for Progress {
                 (sum.0.saturating_add(item.0), sum.1.saturating_add(item.1))
             });
 
+        let state = task.state;
+
         let last_change = subreports
             .iter()
             .map(|report| report.last_change)
@@ -514,6 +527,7 @@ impl Reporter for Progress {
             label,
             completed,
             total,
+            state,
             subreports,
             last_change,
         )
