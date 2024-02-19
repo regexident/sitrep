@@ -33,6 +33,7 @@ Please make sure to add your changes to the appropriate categories:
 - Renamed `RemovalEvent` to `DetachmentEvent`.
 - Made `Progress` emit `Event::Removed` only when being detached from a parent.
 - Changed signature of method `report()` of `Reporter`, changing `&self` to `self: &Arc<Self>`.
+- Made `Progress` impl `Controller`.
 
 ### Deprecated
 

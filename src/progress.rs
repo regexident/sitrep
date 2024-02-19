@@ -582,6 +582,44 @@ impl Reporter for Progress {
     }
 }
 
+impl Controller for Progress {
+    fn pause(self: &Arc<Self>) {
+        let guard = &mut self.state.write();
+
+        if guard.task.state == State::Running {
+            guard.task.state = State::Paused;
+        }
+
+        for child in self.relationships.read().children.values() {
+            child.pause();
+        }
+    }
+
+    fn resume(self: &Arc<Self>) {
+        let guard = &mut self.state.write();
+
+        if guard.task.state == State::Paused {
+            guard.task.state = State::Running;
+        }
+
+        for child in self.relationships.read().children.values() {
+            child.resume();
+        }
+    }
+
+    fn cancel(self: &Arc<Self>) {
+        let guard = &mut self.state.write();
+
+        if [State::Paused, State::Running].contains(&guard.task.state) {
+            guard.task.state = State::Canceled;
+        }
+
+        for child in self.relationships.read().children.values() {
+            child.cancel();
+        }
+    }
+}
+
 #[doc(hidden)]
 #[cfg(any(test, feature = "test-utils"))]
 pub mod test_utils {
