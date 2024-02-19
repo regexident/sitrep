@@ -30,3 +30,17 @@ impl Observer for StdMpscObserver {
 unsafe impl Send for StdMpscObserver where Event: Send {}
 
 unsafe impl Sync for StdMpscObserver where Event: Send {}
+
+/// Implementation of `Observer` that does nothing.
+#[derive(Clone, Debug)]
+pub struct NopObserver;
+
+impl Observer for NopObserver {
+    fn observe(&self, event: Event) {
+        let _ = event;
+    }
+}
+
+unsafe impl Send for NopObserver where Event: Send {}
+
+unsafe impl Sync for NopObserver where Event: Send {}
