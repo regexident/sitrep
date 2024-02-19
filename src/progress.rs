@@ -628,6 +628,10 @@ impl Controller for Progress {
     }
 
     fn pause(self: &Arc<Self>) {
+        if !self.is_pausable() {
+            panic!("not pausable");
+        }
+
         let guard = &mut self.state.write();
 
         if guard.task.state == State::Running {
@@ -640,6 +644,10 @@ impl Controller for Progress {
     }
 
     fn resume(self: &Arc<Self>) {
+        if !self.is_pausable() {
+            panic!("not resumable");
+        }
+
         let guard = &mut self.state.write();
 
         if guard.task.state == State::Paused {
@@ -652,6 +660,10 @@ impl Controller for Progress {
     }
 
     fn cancel(self: &Arc<Self>) {
+        if !self.is_cancelable() {
+            panic!("not cancelable");
+        }
+
         let guard = &mut self.state.write();
 
         if [State::Paused, State::Running].contains(&guard.task.state) {
