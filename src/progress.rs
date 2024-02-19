@@ -51,7 +51,7 @@ pub trait Observer: Send + Sync {
 /// Types for generating progress reports.
 pub trait Reporter: Send + Sync {
     /// Generates the report for a progress.
-    fn report(&self) -> Report;
+    fn report(self: &Arc<Self>) -> Report;
 }
 
 /// The progress' state.
@@ -526,7 +526,7 @@ impl Progress {
 }
 
 impl Reporter for Progress {
-    fn report(&self) -> Report {
+    fn report(self: &Arc<Self>) -> Report {
         let task = &self.state.read().task;
 
         let progress_id = self.id;
