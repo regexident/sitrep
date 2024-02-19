@@ -27,6 +27,7 @@ Please make sure to add your changes to the appropriate categories:
 - Added `child()` accessor method to `Progress`.
 - Added trait `Controller`.
 - Added `is_cancelable()` & `is_pausable()` to `Controller`.
+- Added `set_cancelable()` & `set_pausable()` to `Progress`.
 
 ### Changed
 

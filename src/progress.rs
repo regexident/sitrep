@@ -487,6 +487,28 @@ impl Progress {
         self.state.read().task.state
     }
 
+    /// Sets whether or not the task is cancelable.
+    ///
+    /// # Performance
+    ///
+    /// When making multiple changes prefer to use the `update(…)` method over multiple
+    /// individual calls to setters as those would emit one event per setter call,
+    /// while `progress.update(|task| … )` only emits a single event at the very end.
+    pub fn set_cancelable(self: &Arc<Self>, cancelable: bool) {
+        self.update(|task| task.is_cancelable = cancelable);
+    }
+
+    /// Sets whether or not the task is pausable.
+    ///
+    /// # Performance
+    ///
+    /// When making multiple changes prefer to use the `update(…)` method over multiple
+    /// individual calls to setters as those would emit one event per setter call,
+    /// while `progress.update(|task| … )` only emits a single event at the very end.
+    pub fn set_pausable(self: &Arc<Self>, pausable: bool) {
+        self.update(|task| task.is_pausable = pausable);
+    }
+
     /// Updates the associated task, emitting a corresponding event afterwards.
     ///
     /// # Performance
