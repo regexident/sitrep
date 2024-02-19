@@ -11,7 +11,7 @@ mod task;
 
 pub use self::{
     event::{Event, MessageEvent, RemovalEvent, UpdateEvent},
-    observer::StdMpscObserver,
+    observer::{NopObserver, StdMpscObserver},
     priority::PriorityLevel,
     progress::{Observer, Progress, ProgressId, Reporter},
     report::Report,
