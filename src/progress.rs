@@ -119,7 +119,10 @@ impl Progress {
     ///
     /// Returned are the progress itself, as well as a `Reporter`
     /// which is used on the receiving end of the channel for obtaining reports.
-    pub fn new(task: Task, observer: Arc<dyn Observer>) -> (Arc<Self>, Weak<impl Reporter>) {
+    pub fn new(
+        task: Task,
+        observer: Arc<dyn Observer>,
+    ) -> (Arc<Self>, Weak<impl Reporter + Controller>) {
         let parent = Weak::new();
         let last_tree_change = Arc::new(AtomicUsize::default());
 
