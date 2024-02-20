@@ -29,6 +29,7 @@ Please make sure to add your changes to the appropriate categories:
 - Added `is_cancelable()` & `is_pausable()` to `Controller`.
 - Added `set_cancelable()` & `set_pausable()` to `Progress`.
 - Made methods `pause()`, `resume()` & `cancel()` of `Progress` check if task is cancelable/pausable.
+- Added `is_canceled()` & `is_paused()` getters to `Controller`.
 
 ### Changed
 

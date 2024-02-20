@@ -66,6 +66,12 @@ pub trait Controller: Send + Sync {
     /// Returns `true` if the task is pausable, otherwise `false`.
     fn is_pausable(self: &Arc<Self>) -> bool;
 
+    /// Returns `true` if the task is canceled, otherwise `false`.
+    fn is_canceled(self: &Arc<Self>) -> bool;
+
+    /// Returns `true` if the task is paused, otherwise `false`.
+    fn is_paused(self: &Arc<Self>) -> bool;
+
     /// Sets the state of the corresponding `Progress` task
     /// (and all its running sub-tasks) to `Paused`, recursively.
     fn pause(self: &Arc<Self>);
@@ -625,6 +631,14 @@ impl Controller for Progress {
 
     fn is_pausable(self: &Arc<Self>) -> bool {
         self.state.read().task.is_pausable
+    }
+
+    fn is_canceled(self: &Arc<Self>) -> bool {
+        self.state.read().task.state == State::Canceled
+    }
+
+    fn is_paused(self: &Arc<Self>) -> bool {
+        self.state.read().task.state == State::Paused
     }
 
     fn pause(self: &Arc<Self>) {
