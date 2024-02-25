@@ -94,10 +94,6 @@ struct ProgressState {
     ///
     /// All progresses in a progress tree share the same observer.
     observer: Arc<dyn Observer>,
-    /// An atomic counter for obtaining the tree's last change generation.
-    ///
-    /// All progresses in a progress tree share the same counter.
-    last_tree_change: Arc<AtomicGeneration>,
 }
 
 /// The progress' atomic state.
@@ -139,9 +135,8 @@ impl Progress {
         observer: Arc<dyn Observer>,
     ) -> (Arc<Self>, Weak<impl Reporter + Controller>) {
         let parent = Weak::new();
-        let last_tree_change = Arc::new(AtomicGeneration::from(Generation::MIN));
 
-        let progress = Self::new_impl(task, parent, observer, last_tree_change);
+        let progress = Self::new_impl(task, parent, observer);
         let reporter = Arc::downgrade(&progress);
 
         (progress, reporter)
@@ -157,10 +152,8 @@ impl Progress {
 
         // Children share the observer of their parent:
         let observer = parent_state.observer.clone();
-        // Children share the generation of their parent:
-        let last_tree_change = Arc::clone(&parent_state.last_tree_change);
 
-        let child = Self::new_impl(task, Arc::downgrade(parent), observer, last_tree_change);
+        let child = Self::new_impl(task, Arc::downgrade(parent), observer);
 
         parent
             .relationships
@@ -175,23 +168,14 @@ impl Progress {
         child
     }
 
-    fn new_impl(
-        task: Task,
-        parent: Weak<Self>,
-        observer: Arc<dyn Observer>,
-        last_tree_change: Arc<AtomicGeneration>,
-    ) -> Arc<Self> {
+    fn new_impl(task: Task, parent: Weak<Self>, observer: Arc<dyn Observer>) -> Arc<Self> {
         let id = ProgressId::new_unique();
         let parent = parent;
         let children = HashMap::new();
 
         let relationships = RwLock::new(ProgressRelationships { parent, children });
 
-        let state = RwLock::new(ProgressState {
-            task,
-            observer,
-            last_tree_change,
-        });
+        let state = RwLock::new(ProgressState { task, observer });
 
         let min_priority_level = AtomicPriorityLevel::from(PriorityLevel::MIN);
         let last_change = AtomicGeneration::from(Generation::MIN);
@@ -211,27 +195,14 @@ impl Progress {
 
     /// Attaches `child` to `self`, returning the `child's` own and now no longer used `Observer`.
     pub fn attach_child(self: &Arc<Self>, child: &Arc<Self>) -> Arc<dyn Observer> {
-        let last_tree_change = {
-            let parent_last_tree_change =
-                self.state.read().last_tree_change.load(Ordering::Relaxed);
-            let child_last_tree_change =
-                child.state.read().last_tree_change.load(Ordering::Relaxed);
-
-            parent_last_tree_change.max(child_last_tree_change)
-        };
-
-        // Bump the parent's generation, if necessary:
-        self.state
-            .read()
-            .last_tree_change
-            .store(last_tree_change, Ordering::Relaxed);
+        let child_last_change = child.atomic_state.last_change.load(Ordering::Relaxed);
+        self.atomic_state
+            .last_change
+            .fetch_max(child_last_change, Ordering::Relaxed);
 
         let observer = {
             let parent_state = self.state.read();
             let mut child_state = child.state.write();
-
-            // Children share the generation of their parent:
-            child_state.last_tree_change = Arc::clone(&self.state.read().last_tree_change);
 
             // Make sure the child uses the parent's observer from now on:
             std::mem::replace(&mut child_state.observer, parent_state.observer.clone())
@@ -537,20 +508,41 @@ impl Progress {
         self.emit_update_event(&*self.state.read().observer, self.id);
     }
 
-    fn bump_last_change(self: &Arc<Self>) {
-        let guard = &mut self.state.write();
+    fn bump_last_change(self: &Arc<Self>) -> (Generation, bool) {
+        if let Some(parent) = self.relationships.read().parent.upgrade() {
+            let (last_change, overflow) = parent.bump_last_change();
 
-        let latest_change = guard.last_tree_change.fetch_add(1, Ordering::Relaxed);
+            let prev_last_change = self
+                .atomic_state
+                .last_change
+                .swap(last_change, Ordering::Relaxed);
 
-        let last_change = self.atomic_state.last_change.load(Ordering::Relaxed);
+            debug_assert_eq!(prev_last_change >= last_change, overflow);
 
-        if latest_change < last_change {
-            guard.observer.observe(Event::GenerationOverflow);
+            (last_change, overflow)
+        } else {
+            const INCREMENT: usize = 1;
+
+            let prev_last_change = self
+                .atomic_state
+                .last_change
+                .fetch_add(INCREMENT, Ordering::Relaxed);
+
+            // Since `fetch_add()` returns the previous value we need to perform an
+            // equivalent wrapping add to obtain the new (i.e. stored) `last_change`:
+            let (last_change, overflow) = prev_last_change.add(INCREMENT);
+
+            debug_assert_eq!(prev_last_change >= last_change, overflow);
+
+            if overflow {
+                self.state
+                    .read()
+                    .observer
+                    .observe(Event::GenerationOverflow);
+            }
+
+            (last_change, overflow)
         }
-
-        self.atomic_state
-            .last_change
-            .store(latest_change, Ordering::Relaxed);
     }
 
     fn emit_message_event(

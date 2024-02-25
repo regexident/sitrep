@@ -17,6 +17,15 @@ impl Generation {
     pub fn as_raw(&self) -> usize {
         self.0
     }
+
+    pub(crate) fn add(self, increment: usize) -> (Self, bool) {
+        let (value, overflow) = self.0.overflowing_add(increment);
+        (Self(value), overflow)
+    }
+
+    pub(crate) fn max(self, other: Generation) -> Self {
+        Self(self.0.max(other.0))
+    }
 }
 
 pub(crate) struct AtomicGeneration(pub(crate) AtomicUsize);
@@ -32,8 +41,12 @@ impl AtomicGeneration {
         Generation(self.0.load(order))
     }
 
-    pub(crate) fn store(&self, generation: Generation, order: Ordering) {
-        self.0.store(generation.0, order)
+    pub(crate) fn swap(&self, generation: Generation, order: Ordering) -> Generation {
+        Generation(self.0.swap(generation.0, order))
+    }
+
+    pub(crate) fn fetch_max(&self, generation: Generation, order: Ordering) -> Generation {
+        Generation(self.0.fetch_max(generation.0, order))
     }
 
     pub(crate) fn fetch_add(&self, increment: usize, order: Ordering) -> Generation {
