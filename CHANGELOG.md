@@ -20,6 +20,40 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Added
 
+- n/a
+
+### Changed
+
+- n/a
+
+### Deprecated
+
+- n/a
+
+### Removed
+
+- n/a
+
+### Fixed
+
+- n/a
+
+### Performance
+
+- n/a
+
+### Security
+
+- n/a
+
+### Other
+
+- n/a
+
+## [0.3.0] - 2024-02-25
+
+### Added
+
 - Added enum `State` and corresponding field `state` to `Task` and `Report`.
 - Added `NopObserver` implementation for ignoring events.
 - Added `as_raw()` getter method to `ProgressId`.
@@ -45,29 +79,9 @@ Please make sure to add your changes to the appropriate categories:
 - Simplified logic behind `last_change` generations, removing need for shared `last_tree_change`.
 - Refactored `report()` method of `Progress`.
 
-### Deprecated
-
-- n/a
-
-### Removed
-
-- n/a
-
 ### Fixed
 
 - Fixed bug in `last_change` bumping logic.
-
-### Performance
-
-- n/a
-
-### Security
-
-- n/a
-
-### Other
-
-- n/a
 
 ## [0.2.0] - 2024-02-19
 
