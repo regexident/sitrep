@@ -22,7 +22,11 @@ pub fn stand_alone(c: &mut Criterion) {
 
         b.iter(|| {
             for _ in 0..ITERATIONS {
-                black_box(reporter.report());
+                progress.update(|_| ());
+
+                let report = reporter.report();
+
+                black_box(report);
             }
         });
 
@@ -46,8 +50,15 @@ pub fn hierarchical(c: &mut Criterion) {
         let reporter = reporter.upgrade().unwrap();
 
         b.iter(|| {
-            for _ in 0..ITERATIONS {
-                black_box(reporter.report());
+            for i in 0..ITERATIONS {
+                // Poor man's deterministic pseudo-random sample using a prime-number:
+                let idx = (i * 13) % progresses.len();
+
+                progresses[idx].update(|_| ());
+
+                let report = reporter.report();
+
+                black_box(report);
             }
         });
 
