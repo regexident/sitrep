@@ -41,3 +41,8 @@ required-features = ["test-utils"]
 name = "report"
 harness = false
 required-features = ["test-utils"]
+
+[[bench]]
+name = "partial_report"
+harness = false
+required-features = ["test-utils"]
