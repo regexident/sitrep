@@ -3,6 +3,7 @@
 //! Frontend-agnostic progress reporting.
 
 mod event;
+mod generation;
 mod observer;
 mod priority;
 mod progress;
@@ -11,11 +12,12 @@ mod task;
 
 pub use self::{
     event::{DetachmentEvent, Event, MessageEvent, UpdateEvent},
+    generation::Generation,
     observer::{NopObserver, StdMpscObserver},
     priority::PriorityLevel,
     progress::{Controller, Observer, Progress, ProgressId, Reporter},
     report::Report,
-    task::{Generation, State, Task},
+    task::{State, Task},
 };
 
 #[cfg(any(test, feature = "test-utils"))]

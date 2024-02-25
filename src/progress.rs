@@ -13,6 +13,7 @@ use parking_lot::RwLock;
 
 use crate::{
     event::Event,
+    generation::AtomicGeneration,
     priority::{global_min_priority_level, AtomicPriorityLevel},
     report::Report,
     task::{State, Task},
@@ -96,13 +97,15 @@ struct ProgressState {
     /// An atomic counter for obtaining the tree's last change generation.
     ///
     /// All progresses in a progress tree share the same counter.
-    last_tree_change: Arc<AtomicUsize>,
+    last_tree_change: Arc<AtomicGeneration>,
 }
 
 /// The progress' atomic state.
 struct ProgressAtomicState {
     /// The minimum priority level.
     min_priority_level: AtomicPriorityLevel,
+    /// The task's current generation.
+    last_change: AtomicGeneration,
 }
 
 /// The progress' relationships.
@@ -136,7 +139,7 @@ impl Progress {
         observer: Arc<dyn Observer>,
     ) -> (Arc<Self>, Weak<impl Reporter + Controller>) {
         let parent = Weak::new();
-        let last_tree_change = Arc::new(AtomicUsize::default());
+        let last_tree_change = Arc::new(AtomicGeneration::from(Generation::MIN));
 
         let progress = Self::new_impl(task, parent, observer, last_tree_change);
         let reporter = Arc::downgrade(&progress);
@@ -176,7 +179,7 @@ impl Progress {
         task: Task,
         parent: Weak<Self>,
         observer: Arc<dyn Observer>,
-        last_tree_change: Arc<AtomicUsize>,
+        last_tree_change: Arc<AtomicGeneration>,
     ) -> Arc<Self> {
         let id = ProgressId::new_unique();
         let parent = parent;
@@ -191,8 +194,12 @@ impl Progress {
         });
 
         let min_priority_level = AtomicPriorityLevel::from(PriorityLevel::MIN);
+        let last_change = AtomicGeneration::from(Generation::MIN);
 
-        let atomic_state = ProgressAtomicState { min_priority_level };
+        let atomic_state = ProgressAtomicState {
+            min_priority_level,
+            last_change,
+        };
 
         Arc::new(Self {
             id,
@@ -533,13 +540,17 @@ impl Progress {
     fn bump_last_change(self: &Arc<Self>) {
         let guard = &mut self.state.write();
 
-        let latest_change = Generation(guard.last_tree_change.fetch_add(1, Ordering::Relaxed));
+        let latest_change = guard.last_tree_change.fetch_add(1, Ordering::Relaxed);
 
-        if latest_change < guard.task.last_change {
+        let last_change = self.atomic_state.last_change.load(Ordering::Relaxed);
+
+        if latest_change < last_change {
             guard.observer.observe(Event::GenerationOverflow);
         }
 
-        guard.task.last_change = latest_change;
+        self.atomic_state
+            .last_change
+            .store(latest_change, Ordering::Relaxed);
     }
 
     fn emit_message_event(
@@ -578,6 +589,7 @@ impl Reporter for Progress {
             .values()
             .map(|progress| progress.report())
             .collect();
+        let last_change = self.atomic_state.last_change.load(Ordering::Relaxed);
 
         let determinate_reports = subreports.iter().filter(|&report| !report.is_indeterminate);
 
@@ -592,7 +604,7 @@ impl Reporter for Progress {
         let last_change = subreports
             .iter()
             .map(|report| report.last_change)
-            .fold(task.last_change, |max, item| max.max(item));
+            .fold(last_change, |max, item| max.max(item));
 
         Report::new(
             progress_id,
