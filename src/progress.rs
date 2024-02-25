@@ -33,7 +33,7 @@ impl Default for ProgressId {
 
 impl ProgressId {
     pub(crate) fn new_unique() -> Self {
-        Self(NEXT_ID.fetch_add(1, Ordering::SeqCst))
+        Self(NEXT_ID.fetch_add(1, Ordering::Relaxed))
     }
 
     /// Returns the raw internal identifier value.
@@ -217,7 +217,7 @@ impl Progress {
         self.state
             .read()
             .last_tree_change
-            .store(last_tree_change, Ordering::SeqCst);
+            .store(last_tree_change, Ordering::Relaxed);
 
         let observer = {
             let parent_state = self.state.read();
@@ -388,7 +388,7 @@ impl Progress {
     pub fn set_min_priority_level(&self, level: Option<PriorityLevel>) {
         self.atomic_state
             .min_priority_level
-            .store(level, Ordering::SeqCst)
+            .store(level, Ordering::Relaxed)
     }
 
     /// Returns the effective minimum priority level.
