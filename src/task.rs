@@ -2,19 +2,6 @@
 
 use std::borrow::Cow;
 
-/// A monotonically increasing generation counter.
-///
-/// Specifies the generation at which a value was last changed.
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default, Debug)]
-pub struct Generation(pub(crate) usize);
-
-impl Generation {
-    /// Returns the raw internal generational counter value.
-    pub fn as_raw(&self) -> usize {
-        self.0
-    }
-}
-
 /// A task's state.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Default, Debug)]
 #[repr(u8)]
@@ -45,8 +32,6 @@ pub struct Task {
     pub is_cancelable: bool,
     /// Whether or not the task is pausable.
     pub is_pausable: bool,
-    /// The task's current generation.
-    pub(crate) last_change: Generation,
 }
 
 impl Task {

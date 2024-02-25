@@ -2,10 +2,7 @@
 
 use std::borrow::Cow;
 
-use crate::{
-    task::{Generation, State},
-    ProgressId,
-};
+use crate::{generation::Generation, task::State, ProgressId};
 
 /// A progress' report.
 #[derive(Clone, PartialEq, Default, Debug)]
