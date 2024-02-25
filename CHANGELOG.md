@@ -42,6 +42,7 @@ Please make sure to add your changes to the appropriate categories:
 - Relaxed memory ordering from `Ordering::SeqCst` to `Ordering::Relaxed`.
 - Moved `last_change` from `Task` into `atomic_state` field of `Progress`.
 - Simplified logic behind `last_change` generations, removing need for shared `last_tree_change`.
+- Refactored `report()` method of `Progress`.
 
 ### Deprecated
 
