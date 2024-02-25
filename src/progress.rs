@@ -51,8 +51,12 @@ pub trait Observer: Send + Sync {
 
 /// Types for generating progress reports.
 pub trait Reporter: Send + Sync {
-    /// Generates the report for a progress.
+    /// Generates the full report for a progress.
     fn report(self: &Arc<Self>) -> Report;
+
+    /// Generates a partial progress change report for all changes since `baseline`
+    /// including only sub-reports that were changed, or `None` if nothing was changed.
+    fn partial_report(self: &Arc<Self>, baseline: Generation) -> Option<Report>;
 }
 
 /// Types for controlling progress-tracked tasks.
@@ -605,6 +609,57 @@ impl Reporter for Progress {
             subreports,
             last_change,
         )
+    }
+
+    fn partial_report(self: &Arc<Self>, generation: Generation) -> Option<Report> {
+        let last_change = self.atomic_state.last_change.load(Ordering::Relaxed);
+
+        if last_change <= generation {
+            return None;
+        }
+
+        let mut subreports: Vec<Report> = vec![];
+        let mut sub_completed: usize = 0;
+        let mut sub_total: usize = 0;
+
+        for child in self.relationships.read().children.values() {
+            let (completed, total) = if let Some(subreport) = child.partial_report(generation) {
+                let discrete = subreport.discrete();
+                subreports.push(subreport);
+                discrete
+            } else {
+                child.state.read().task.effective_discrete()
+            };
+
+            sub_completed = sub_completed.saturating_add(completed);
+            sub_total = sub_total.saturating_add(total);
+        }
+
+        if subreports.is_empty() && last_change <= generation {
+            return None;
+        }
+
+        let progress_id = self.id;
+
+        let (own_completed, own_total, label, state) = {
+            let task = &self.state.read().task;
+            let (completed, total) = task.effective_discrete();
+            let label = task.label.clone();
+            let state = task.state;
+            (completed, total, label, state)
+        };
+
+        let (completed, total) = (own_completed + sub_completed, own_total + sub_total);
+
+        Some(Report::new(
+            progress_id,
+            label,
+            completed,
+            total,
+            state,
+            subreports,
+            last_change,
+        ))
     }
 }
 
