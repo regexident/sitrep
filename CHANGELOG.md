@@ -40,6 +40,7 @@ Please make sure to add your changes to the appropriate categories:
 - Made `Progress` impl `Controller`.
 - Moved `get()` method from `Progress` into `Controller`.
 - Relaxed memory ordering from `Ordering::SeqCst` to `Ordering::Relaxed`.
+- Moved `last_change` from `Task` into `atomic_state` field of `Progress`.
 
 ### Deprecated
 
