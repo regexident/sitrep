@@ -39,8 +39,4 @@ impl AtomicGeneration {
     pub(crate) fn fetch_add(&self, increment: usize, order: Ordering) -> Generation {
         Generation(self.0.fetch_add(increment, order))
     }
-
-    pub(crate) fn fetch_max(&self, generation: Generation, order: Ordering) -> Generation {
-        Generation(self.0.fetch_max(generation.0, order))
-    }
 }
