@@ -41,6 +41,7 @@ Please make sure to add your changes to the appropriate categories:
 - Moved `get()` method from `Progress` into `Controller`.
 - Relaxed memory ordering from `Ordering::SeqCst` to `Ordering::Relaxed`.
 - Moved `last_change` from `Task` into `atomic_state` field of `Progress`.
+- Simplified logic behind `last_change` generations, removing need for shared `last_tree_change`.
 
 ### Deprecated
 
@@ -52,7 +53,7 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Fixed
 
-- n/a
+- Fixed bug in `last_change` bumping logic.
 
 ### Performance
 
