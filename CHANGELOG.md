@@ -39,6 +39,7 @@ Please make sure to add your changes to the appropriate categories:
 - Changed signature of method `report()` of `Reporter`, changing `&self` to `self: &Arc<Self>`.
 - Made `Progress` impl `Controller`.
 - Moved `get()` method from `Progress` into `Controller`.
+- Relaxed memory ordering from `Ordering::SeqCst` to `Ordering::Relaxed`.
 
 ### Deprecated
 
