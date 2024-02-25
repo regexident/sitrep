@@ -22,10 +22,6 @@ impl Generation {
         let (value, overflow) = self.0.overflowing_add(increment);
         (Self(value), overflow)
     }
-
-    pub(crate) fn max(self, other: Generation) -> Self {
-        Self(self.0.max(other.0))
-    }
 }
 
 pub(crate) struct AtomicGeneration(pub(crate) AtomicUsize);

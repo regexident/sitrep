@@ -569,10 +569,7 @@ impl Progress {
 
 impl Reporter for Progress {
     fn report(self: &Arc<Self>) -> Report {
-        let task = &self.state.read().task;
-
-        let progress_id = self.id;
-        let label = task.label.clone();
+        let last_change = self.atomic_state.last_change.load(Ordering::Relaxed);
 
         let subreports: Vec<_> = self
             .relationships
@@ -581,22 +578,23 @@ impl Reporter for Progress {
             .values()
             .map(|progress| progress.report())
             .collect();
-        let last_change = self.atomic_state.last_change.load(Ordering::Relaxed);
 
-        let determinate_reports = subreports.iter().filter(|&report| !report.is_indeterminate);
+        let progress_id = self.id;
 
-        let (completed, total) = determinate_reports
+        let (own_completed, own_total, label, state) = {
+            let task = &self.state.read().task;
+            let (completed, total) = task.effective_discrete();
+            let label = task.label.clone();
+            let state = task.state;
+            (completed, total, label, state)
+        };
+
+        let (completed, total): (usize, usize) = subreports
+            .iter()
             .map(|report| report.discrete())
-            .fold(task.effective_discrete(), |sum, item| {
+            .fold((own_completed, own_total), |sum, item| {
                 (sum.0.saturating_add(item.0), sum.1.saturating_add(item.1))
             });
-
-        let state = task.state;
-
-        let last_change = subreports
-            .iter()
-            .map(|report| report.last_change)
-            .fold(last_change, |max, item| max.max(item));
 
         Report::new(
             progress_id,
