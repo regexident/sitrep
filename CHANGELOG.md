@@ -24,7 +24,9 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Changed
 
-- n/a
+- Updated dependencies:
+  - `parking_lot` from `0.12.1` to `0.12.2`
+  - `criterion` from `0.5` to `0.5.1`
 
 ### Deprecated
 
