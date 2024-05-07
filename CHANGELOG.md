@@ -20,15 +20,11 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Added
 
-- Made `Progress` implement `Debug`.
+- n/a
 
 ### Changed
 
-- Updated dependencies:
-  - `parking_lot` from `0.12.1` to `0.12.2`
-  - `criterion` from `0.5` to `0.5.1`
-  - `bumpalo` from `3.15.0` to `3.16.0`
-- Demoted 'clap_builder' from dependency to dev-dependency.
+- n/a
 
 ### Deprecated
 
@@ -53,6 +49,20 @@ Please make sure to add your changes to the appropriate categories:
 ### Other
 
 - n/a
+
+## [0.3.1] - 2024-05-07
+
+### Added
+
+- Made `Progress` implement `Debug`.
+
+### Changed
+
+- Updated dependencies:
+  - `parking_lot` from `0.12.1` to `0.12.2`
+  - `criterion` from `0.5` to `0.5.1`
+  - `bumpalo` from `3.15.0` to `3.16.0`
+- Demoted 'clap_builder' from dependency to dev-dependency.
 
 ## [0.3.0] - 2024-02-25
 
