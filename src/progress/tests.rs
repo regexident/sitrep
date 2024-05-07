@@ -313,6 +313,36 @@ mod update {
     }
 }
 
+mod debug {
+    use super::*;
+
+    #[test]
+    fn fmt() {
+        let observer = Arc::new(NopObserver);
+
+        let (progress, _) = Progress::new(Task::default(), observer);
+
+        let id = ProgressId(0);
+        let report = Report {
+            progress_id: id,
+            label: None,
+            completed: 0,
+            total: 0,
+            fraction: 0.0,
+            is_indeterminate: true,
+            state: State::Running,
+            subreports: vec![],
+            last_change: Generation(0),
+        };
+
+        let actual = format!("{progress:?}");
+        let expected =
+            format!("Progress {{ id: {id:?}, parent: None, children: [], report: {report:?} }}");
+
+        assert_eq!(actual, expected);
+    }
+}
+
 mod report {
     use super::*;
 

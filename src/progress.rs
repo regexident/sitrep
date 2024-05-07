@@ -569,10 +569,8 @@ impl Progress {
     fn emit_removed_event(self: &Arc<Self>, observer: &dyn Observer, id: ProgressId) {
         observer.observe(Event::Detachment(DetachmentEvent { id }));
     }
-}
 
-impl Reporter for Progress {
-    fn report(self: &Arc<Self>) -> Report {
+    fn report(&self) -> Report {
         let last_change = self.atomic_state.last_change.load(Ordering::Relaxed);
 
         let subreports: Vec<_> = self
@@ -609,6 +607,30 @@ impl Reporter for Progress {
             subreports,
             last_change,
         )
+    }
+}
+
+impl std::fmt::Debug for Progress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let relationships = self.relationships.read();
+
+        let parent = relationships.parent.upgrade().map(|parent| parent.id());
+        let children: Vec<&ProgressId> = relationships.children.keys().collect();
+
+        f.debug_struct("Progress")
+            .field("id", &self.id)
+            .field("parent", &parent)
+            .field("children", &children)
+            .field("report", &self.report())
+            .finish()
+    }
+}
+
+impl Reporter for Progress {
+    fn report(self: &Arc<Self>) -> Report {
+        use std::ops::Deref;
+
+        self.deref().report()
     }
 
     fn partial_report(self: &Arc<Self>, generation: Generation) -> Option<Report> {
