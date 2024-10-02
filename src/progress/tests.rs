@@ -322,7 +322,7 @@ mod debug {
 
         let (progress, _) = Progress::new(Task::default(), observer);
 
-        let id = ProgressId(0);
+        let id = progress.id();
         let report = Report {
             progress_id: id,
             label: None,
