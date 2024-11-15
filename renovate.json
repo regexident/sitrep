@@ -5,12 +5,12 @@
   ],
   "packageRules": [
     {
-      "matchPackagePatterns": [
-        "*"
-      ],
       "allowedVersions": "!/^=/",
       "groupName": "dependencies",
-      "groupSlug": "dependencies"
+      "groupSlug": "dependencies",
+      "matchPackageNames": [
+        "*"
+      ]
     }
   ]
 }
