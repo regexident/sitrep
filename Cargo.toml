@@ -21,7 +21,7 @@ parking_lot = "0.12.2"
 criterion = "0.6.0"
 
 # minimal versions
-clap_builder = "=4.5.39" # MSRV <= 1.70.0
+clap_builder = "=4.5.40" # MSRV <= 1.70.0
 
 # overridden versions
 bumpalo = "3.16.0" # yanked: "3.15.0"
