@@ -42,7 +42,7 @@ jobs:
         with:
           toolchain: stable
           components: rust-src
-      - uses: cargo-bins/cargo-binstall@v1.12.6
+      - uses: cargo-bins/cargo-binstall@v1.14.1
       - run: cargo binstall cargo-expand --no-confirm
       - run: cargo test
 
