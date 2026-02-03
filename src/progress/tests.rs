@@ -504,3 +504,161 @@ mod overflow {
         }
     }
 }
+
+mod concurrent {
+    use super::*;
+
+    #[test]
+    fn concurrent_updates() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        let (progress, _reporter) = Progress::new(Task::default(), erased_observer);
+
+        // Spawn multiple threads that update the progress concurrently
+        let handles: Vec<_> = (0..10)
+            .map(|i| {
+                let progress = Arc::clone(&progress);
+                std::thread::spawn(move || {
+                    for j in 0..100 {
+                        progress.update(|task| {
+                            task.completed = i * 100 + j;
+                        });
+                    }
+                })
+            })
+            .collect();
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        // Verify that the progress is still in a valid state
+        let report = progress.report();
+        assert_eq!(report.progress_id, progress.id());
+    }
+
+    #[test]
+    fn concurrent_attach_detach() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        let (parent, _reporter) = Progress::new(Task::default(), erased_observer);
+
+        // Spawn threads that attach and detach children concurrently
+        let handles: Vec<_> = (0..5)
+            .map(|_| {
+                let parent = Arc::clone(&parent);
+                std::thread::spawn(move || {
+                    // Create children and attach them
+                    let children: Vec<_> = (0..10)
+                        .map(|_| Progress::new_with_parent(Task::default(), &parent))
+                        .collect();
+
+                    // Detach some children
+                    for child in children.iter().take(5) {
+                        child.detach_from_parent(Arc::new(NopObserver));
+                    }
+                })
+            })
+            .collect();
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        // Verify parent is still in a valid state
+        let report = parent.report();
+        assert_eq!(report.progress_id, parent.id());
+    }
+
+    #[test]
+    fn concurrent_pause_resume() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        let task = Task::default().pausable();
+        let (progress, _reporter) = Progress::new(task, erased_observer);
+
+        // Spawn threads that pause and resume concurrently
+        let handles: Vec<_> = (0..10)
+            .map(|i| {
+                let progress = Arc::clone(&progress);
+                std::thread::spawn(move || {
+                    for _ in 0..100 {
+                        if i % 2 == 0 {
+                            let _ = progress.pause();
+                        } else {
+                            let _ = progress.resume();
+                        }
+                    }
+                })
+            })
+            .collect();
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        // Verify progress is still in a valid state
+        let report = progress.report();
+        assert_eq!(report.progress_id, progress.id());
+    }
+
+    #[test]
+    fn concurrent_cancel() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        let task = Task::default().cancelable();
+        let (progress, _reporter) = Progress::new(task, erased_observer);
+
+        // Spawn threads that try to cancel concurrently
+        let handles: Vec<_> = (0..10)
+            .map(|_| {
+                let progress = Arc::clone(&progress);
+                std::thread::spawn(move || {
+                    let _ = progress.cancel();
+                })
+            })
+            .collect();
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        // Verify progress is canceled
+        assert!(progress.is_canceled());
+        let report = progress.report();
+        assert_eq!(report.progress_id, progress.id());
+        assert_eq!(report.state, State::Canceled);
+    }
+
+    #[test]
+    fn concurrent_messages() {
+        let (observer, erased_observer) = SpyObserver::new();
+
+        let (progress, _reporter) = Progress::new(Task::default(), erased_observer);
+
+        // Spawn threads that send messages concurrently
+        let handles: Vec<_> = (0..10)
+            .map(|i| {
+                let progress = Arc::clone(&progress);
+                std::thread::spawn(move || {
+                    for j in 0..10 {
+                        progress.message(|| format!("Thread {i} message {j}"), PriorityLevel::Info);
+                    }
+                })
+            })
+            .collect();
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        // Verify all messages were received
+        let message_events = observer.message_events();
+        assert_eq!(message_events.len(), 100);
+    }
+}
