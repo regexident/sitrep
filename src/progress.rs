@@ -254,6 +254,10 @@ impl Progress {
     }
 
     /// Detaches `child` from `self`, giving it a new `observer`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `child` is not actually a child of `self`.
     pub fn detach_child(self: &Arc<Self>, child: &Arc<Self>, observer: Arc<dyn Observer>) {
         assert!(
             self.relationships.read().children.contains_key(&child.id),
@@ -427,7 +431,7 @@ impl Progress {
         self.update(|task| task.label = label.into());
     }
 
-    /// Returns the task's label to `label`.
+    /// Returns the task's label.
     pub fn label(self: &Arc<Self>) -> Option<Cow<'static, str>> {
         self.state.read().task.label.clone()
     }

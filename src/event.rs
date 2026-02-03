@@ -59,7 +59,7 @@ pub struct MessageEvent {
     pub priority: PriorityLevel,
 }
 
-/// A update event.
+/// A detachment event.
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct DetachmentEvent {
     /// The associated progress' identifier.
