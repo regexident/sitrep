@@ -23,6 +23,15 @@ impl From<StdMpscObserver> for Sender<Event> {
 
 impl Observer for StdMpscObserver {
     fn observe(&self, event: Event) {
+        #[cfg(feature = "tracing")]
+        if let Err(err) = self.sender.send(event) {
+            tracing::debug!(
+                error = ?err,
+                "Failed to send event: receiver has been dropped. This is expected during shutdown."
+            );
+        }
+
+        #[cfg(not(feature = "tracing"))]
         let _ = self.sender.send(event);
     }
 }

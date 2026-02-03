@@ -58,10 +58,12 @@ impl PriorityLevel {
 
         match EnvPriorityLevel::from_str(&level) {
             Ok(EnvPriorityLevel(min_level)) => Some(min_level),
-            Err(err) => {
-                eprintln!(
-                    "Warning: Unrecognized value for {MIN_PRIORITY_LEVEL_KEY:?}: {:?}. Using default.",
-                    err.unknown
+            Err(_err) => {
+                #[cfg(feature = "tracing")]
+                tracing::warn!(
+                    env_key = MIN_PRIORITY_LEVEL_KEY,
+                    value = ?_err.unknown,
+                    "Unrecognized value for environment variable. Using default."
                 );
                 None
             }

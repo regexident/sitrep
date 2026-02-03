@@ -20,7 +20,7 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Added
 
-- n/a
+- Added optional tracing support for structured error logging.
 
 ### Changed
 
