@@ -26,7 +26,7 @@ fn main() {
 
     // The sending end of the progress report:
     let worker_handle = thread::spawn(move || {
-        progress.set_label("Crunching numbers ...".to_owned());
+        progress.set_label(Some("Crunching numbers ...".into()));
 
         let total = 100;
         progress.set_total(total);
