@@ -77,9 +77,7 @@ impl Report {
         if self.prune(min_last_change) {
             Some(self)
         } else {
-            {
-                None
-            }
+            None
         }
     }
 
