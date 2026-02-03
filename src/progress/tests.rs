@@ -662,3 +662,142 @@ mod concurrent {
         assert_eq!(message_events.len(), 100);
     }
 }
+
+mod error_conditions {
+    use super::*;
+
+    #[test]
+    fn pause_on_non_pausable_task() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        // Create a task that is NOT pausable
+        let task = Task::default();
+        let (progress, _reporter) = Progress::new(task, erased_observer);
+
+        // Attempting to pause should return an error
+        let result = progress.pause();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), crate::ControlError::NotPausable);
+    }
+
+    #[test]
+    fn resume_on_non_pausable_task() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        // Create a task that is NOT pausable
+        let task = Task::default();
+        let (progress, _reporter) = Progress::new(task, erased_observer);
+
+        // Attempting to resume should return an error
+        let result = progress.resume();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), crate::ControlError::NotPausable);
+    }
+
+    #[test]
+    fn cancel_on_non_cancelable_task() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        // Create a task that is NOT cancelable
+        let task = Task::default();
+        let (progress, _reporter) = Progress::new(task, erased_observer);
+
+        // Attempting to cancel should return an error
+        let result = progress.cancel();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), crate::ControlError::NotCancelable);
+    }
+
+    #[test]
+    #[should_panic(expected = "not a child")]
+    fn detach_child_panics_when_not_a_child() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        let (parent, _reporter) = Progress::new(Task::default(), Arc::clone(&erased_observer));
+        let not_a_child = Progress::new_with_parent(Task::default(), &parent);
+
+        // Detach the child properly first
+        not_a_child.detach_from_parent(Arc::new(NopObserver));
+
+        // Now trying to detach again should panic because it's no longer a child
+        parent.detach_child(&not_a_child, Arc::new(NopObserver));
+    }
+
+    #[test]
+    fn pause_propagates_to_children() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        let task = Task::default().pausable();
+        let (parent, _reporter) = Progress::new(task, erased_observer);
+
+        let child_task = Task::default().pausable();
+        let child = Progress::new_with_parent(child_task, &parent);
+
+        let grandchild_task = Task::default().pausable();
+        let grandchild = Progress::new_with_parent(grandchild_task, &child);
+
+        // Pause the parent
+        parent.pause().unwrap();
+
+        // Verify all are paused
+        assert!(parent.is_paused());
+        assert!(child.is_paused());
+        assert!(grandchild.is_paused());
+    }
+
+    #[test]
+    fn cancel_propagates_to_children() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        let task = Task::default().cancelable();
+        let (parent, _reporter) = Progress::new(task, erased_observer);
+
+        let child_task = Task::default().cancelable();
+        let child = Progress::new_with_parent(child_task, &parent);
+
+        let grandchild_task = Task::default().cancelable();
+        let grandchild = Progress::new_with_parent(grandchild_task, &child);
+
+        // Cancel the parent
+        parent.cancel().unwrap();
+
+        // Verify all are canceled
+        assert!(parent.is_canceled());
+        assert!(child.is_canceled());
+        assert!(grandchild.is_canceled());
+    }
+
+    #[test]
+    fn pause_fails_if_child_not_pausable() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        let task = Task::default().pausable();
+        let (parent, _reporter) = Progress::new(task, erased_observer);
+
+        // Create a child that is NOT pausable
+        let child_task = Task::default();
+        let _child = Progress::new_with_parent(child_task, &parent);
+
+        // Attempting to pause parent should fail because child is not pausable
+        let result = parent.pause();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), crate::ControlError::NotPausable);
+    }
+
+    #[test]
+    fn cancel_fails_if_child_not_cancelable() {
+        let (_observer, erased_observer) = SpyObserver::new();
+
+        let task = Task::default().cancelable();
+        let (parent, _reporter) = Progress::new(task, erased_observer);
+
+        // Create a child that is NOT cancelable
+        let child_task = Task::default();
+        let _child = Progress::new_with_parent(child_task, &parent);
+
+        // Attempting to cancel parent should fail because child is not cancelable
+        let result = parent.cancel();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), crate::ControlError::NotCancelable);
+    }
+}
