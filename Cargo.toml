@@ -22,7 +22,7 @@ tracing = { version = "0.1.44", optional = true }
 criterion = "0.8.0"
 
 # minimal versions
-clap_builder = "=4.5.56" # MSRV <= 1.70.0
+clap_builder = "=4.5.57" # MSRV <= 1.70.0
 
 # overridden versions
 bumpalo = "3.16.0" # yanked: "3.15.0"
