@@ -181,10 +181,7 @@ impl Progress {
     /// Returned are the progress itself, as well as a `Reporter`
     /// which is used on the receiving end of the channel for obtaining reports.
     pub fn new_with_parent(task: Task, parent: &Arc<Self>) -> Arc<Self> {
-        let parent_state = parent.state.read();
-
-        // Children share the observer of their parent:
-        let observer = parent_state.observer.clone();
+        let observer = parent.state.read().observer.clone();
 
         let child = Self::new_impl(task, Arc::downgrade(parent), observer);
 
