@@ -452,3 +452,55 @@ fn get() {
     assert!(grandchild.get(child.id).is_none());
     assert_eq!(grandchild.get(grandchild.id).unwrap().id, grandchild.id);
 }
+
+mod overflow {
+    use super::*;
+
+    #[test]
+    fn generation_overflow_event_emitted() {
+        let (observer, erased_observer) = SpyObserver::new();
+
+        let (progress, _reporter) = Progress::new(Task::default(), erased_observer);
+
+        // Set generation to near max to trigger overflow on next update
+        progress
+            .atomic_state
+            .last_change
+            .swap(Generation::MAX, std::sync::atomic::Ordering::Relaxed);
+
+        // Trigger an update that will cause generation overflow
+        progress.update(|task| {
+            task.completed = 1;
+        });
+
+        // Check that GenerationOverflow event was emitted
+        let events = observer.events();
+        let has_overflow_event = events
+            .iter()
+            .any(|event| matches!(event, Event::GenerationOverflow));
+
+        assert!(
+            has_overflow_event,
+            "GenerationOverflow event should be emitted when generation wraps around"
+        );
+    }
+
+    #[test]
+    fn progress_id_wrapping() {
+        // ProgressId uses an atomic counter that can wrap around.
+        // This test verifies the monotonic increment behavior documented in the tests.
+        // While we cannot easily test the actual wrapping at usize::MAX in a unit test,
+        // we can at least verify that IDs continue to increment normally.
+
+        let ids: Vec<_> = (0..100).map(|_| ProgressId::new_unique()).collect();
+
+        for window in ids.windows(2) {
+            let [prev, next] = window else {
+                panic!("expected window of size 2");
+            };
+
+            // Each ID should be greater than the previous one
+            assert!(prev.0 < next.0);
+        }
+    }
+}
