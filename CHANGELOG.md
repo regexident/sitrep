@@ -39,7 +39,7 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Fixed
 
-- Fixed potential deadlocks on recursive calls in `Progress`'s `.pause()`, and `.resume()` methods.
+- Fixed potential deadlocks on recursive calls in `Progress`'s `.pause()`, `.resume()`, and `.cancel()` methods.
 
 ### Performance
 
