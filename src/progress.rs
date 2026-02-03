@@ -66,10 +66,12 @@ impl AsRef<Arc<dyn Observer>> for DetachedObserver {
 /// Types for generating progress reports.
 pub trait Reporter: Send + Sync {
     /// Generates the full report for a progress.
+    #[must_use]
     fn report(self: &Arc<Self>) -> Report;
 
     /// Generates a partial progress change report for all changes since `baseline`
     /// including only sub-reports that were changed, or `None` if nothing was changed.
+    #[must_use]
     fn partial_report(self: &Arc<Self>, baseline: Generation) -> Option<Report>;
 }
 
@@ -77,18 +79,23 @@ pub trait Reporter: Send + Sync {
 pub trait Controller: Send + Sync {
     /// Returns the sub-progress with the given `id` within the tree,
     /// or `None` if it doesn't exist.
+    #[must_use]
     fn get(self: &Arc<Self>, progress_id: ProgressId) -> Option<Arc<Self>>;
 
     /// Returns `true` if the task is cancelable, otherwise `false`.
+    #[must_use]
     fn is_cancelable(self: &Arc<Self>) -> bool;
 
     /// Returns `true` if the task is pausable, otherwise `false`.
+    #[must_use]
     fn is_pausable(self: &Arc<Self>) -> bool;
 
     /// Returns `true` if the task is canceled, otherwise `false`.
+    #[must_use]
     fn is_canceled(self: &Arc<Self>) -> bool;
 
     /// Returns `true` if the task is paused, otherwise `false`.
+    #[must_use]
     fn is_paused(self: &Arc<Self>) -> bool;
 
     /// Sets the state of the corresponding `Progress` task
@@ -283,6 +290,7 @@ impl Progress {
     }
 
     /// Returns the progress' parent, or `None` if `self` has no parent.
+    #[must_use]
     pub fn parent(self: &Arc<Self>) -> Option<Arc<Self>> {
         self.relationships.read().parent.upgrade()
     }
@@ -428,6 +436,7 @@ impl Progress {
     }
 
     /// Returns the task's label.
+    #[must_use]
     pub fn label(self: &Arc<Self>) -> Option<Cow<'static, str>> {
         self.state.read().task.label.clone()
     }
@@ -466,6 +475,7 @@ impl Progress {
     }
 
     /// Returns the task's completed unit count.
+    #[must_use]
     pub fn completed(self: &Arc<Self>) -> usize {
         self.state.read().task.completed
     }
@@ -484,6 +494,7 @@ impl Progress {
     }
 
     /// Returns the task's total unit count.
+    #[must_use]
     pub fn total(self: &Arc<Self>) -> usize {
         self.state.read().task.total
     }
@@ -500,6 +511,7 @@ impl Progress {
     }
 
     /// Returns the task's state.
+    #[must_use]
     pub fn state(self: &Arc<Self>) -> State {
         self.state.read().task.state
     }
