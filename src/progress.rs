@@ -200,7 +200,6 @@ impl Progress {
 
     fn new_impl(task: Task, parent: Weak<Self>, observer: Arc<dyn Observer>) -> Arc<Self> {
         let id = ProgressId::new_unique();
-        let parent = parent;
         let children = HashMap::new();
 
         let relationships = RwLock::new(ProgressRelationships { parent, children });
