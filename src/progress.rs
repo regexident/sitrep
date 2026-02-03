@@ -787,13 +787,24 @@ impl Controller for Progress {
             return Err(crate::ControlError::NotPausable);
         }
 
-        let guard = &mut self.state.write();
+        {
+            let guard = &mut self.state.write();
 
-        if guard.task.state == State::Paused {
-            guard.task.state = State::Running;
-        }
+            if guard.task.state == State::Paused {
+                guard.task.state = State::Running;
+            }
+        } // Release write lock before recursing
 
-        for child in self.relationships.read().children.values() {
+        // Now recursively resume children
+        let children: Vec<_> = self
+            .relationships
+            .read()
+            .children
+            .values()
+            .cloned()
+            .collect();
+
+        for child in children {
             child.resume()?;
         }
 
