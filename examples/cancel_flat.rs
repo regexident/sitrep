@@ -45,7 +45,7 @@ fn main() {
             };
 
             // Cancel the task from the controller end of things:
-            controller.cancel();
+            controller.cancel().ok();
         }
     });
 

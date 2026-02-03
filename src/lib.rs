@@ -2,6 +2,7 @@
 
 //! Frontend-agnostic progress reporting.
 
+mod error;
 mod event;
 mod generation;
 mod observer;
@@ -11,6 +12,7 @@ mod report;
 mod task;
 
 pub use self::{
+    error::ControlError,
     event::{DetachmentEvent, Event, MessageEvent, UpdateEvent},
     generation::Generation,
     observer::{NopObserver, StdMpscObserver},
