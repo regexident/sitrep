@@ -20,15 +20,11 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Added
 
-- Added optional tracing support for structured error logging.
+- n/a
 
 ### Changed
 
-- Bumped MSRV from `1.70.0` to `1.72.0`.
-- Replaced panics with `Result` returns in control methods.
-- Replaced panic with warning on invalid env variable in "src/priority.rs".
-- Wrapped `attach_child()` return value in `DetachedObserver` newtype for clarity.
-- Added `#[must_use]` attributes to getter methods in `Reporter` and `Controller`.
+- n/a
 
 ### Deprecated
 
@@ -36,11 +32,11 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Removed
 
-- Removed `Default` impl from `ProgressId` to prevent surprising side effects.
+- n/a
 
 ### Fixed
 
-- Fixed potential deadlocks on recursive calls in `Progress`'s `.pause()`, `.resume()`, and `.cancel()` methods.
+- n/a
 
 ### Performance
 
@@ -53,6 +49,28 @@ Please make sure to add your changes to the appropriate categories:
 ### Other
 
 - n/a
+
+## [0.4.0] - 2026-02-03
+
+### Added
+
+- Added optional tracing support for structured error logging.
+
+### Changed
+
+- Bumped MSRV from `1.70.0` to `1.72.0`.
+- Replaced panics with `Result` returns in control methods.
+- Replaced panic with warning on invalid env variable in "src/priority.rs".
+- Wrapped `attach_child()` return value in `DetachedObserver` newtype for clarity.
+- Added `#[must_use]` attributes to getter methods in `Reporter` and `Controller`.
+
+### Removed
+
+- Removed `Default` impl from `ProgressId` to prevent surprising side effects.
+
+### Fixed
+
+- Fixed potential deadlocks on recursive calls in `Progress`'s `.pause()`, `.resume()`, and `.cancel()` methods.
 
 ## [0.3.1] - 2024-05-07
 
