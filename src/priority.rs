@@ -2,24 +2,18 @@
 
 use std::{
     str::FromStr,
-    sync::atomic::{AtomicU8, Ordering},
+    sync::{
+        atomic::{AtomicU8, Ordering},
+        OnceLock,
+    },
 };
-
-use parking_lot::Once;
 
 const MIN_PRIORITY_LEVEL_KEY: &str = "SITREP_PRIO";
 
 pub(crate) fn global_min_priority_level() -> PriorityLevel {
-    static mut MIN_PRIORITY_LEVEL: PriorityLevel = PriorityLevel::MIN;
-    static ONCE: Once = Once::new();
+    static MIN_PRIORITY_LEVEL: OnceLock<PriorityLevel> = OnceLock::new();
 
-    // Safety:
-    // Accessing the static mut is safe here, as per:
-    // https://docs.rs/parking_lot/0.12.1/parking_lot/struct.Once.html#method.call_once
-    unsafe {
-        ONCE.call_once(|| MIN_PRIORITY_LEVEL = PriorityLevel::from_env().unwrap());
-        MIN_PRIORITY_LEVEL
-    }
+    *MIN_PRIORITY_LEVEL.get_or_init(|| PriorityLevel::from_env().unwrap_or(PriorityLevel::MIN))
 }
 
 /// A message's priority level.
