@@ -620,6 +620,9 @@ impl Progress {
             (completed, total, label, state)
         };
 
+        // Use saturating arithmetic to prevent overflow when aggregating child progress.
+        // Individual task values are bounded by `usize::MAX`, but the sum of all children
+        // could theoretically overflow. Saturating at `usize::MAX` is semantically correct.
         let (completed, total): (usize, usize) = subreports
             .iter()
             .map(|report| report.discrete())
@@ -682,6 +685,7 @@ impl Reporter for Progress {
                 child.state.read().task.effective_discrete()
             };
 
+            // Use saturating arithmetic to prevent overflow when aggregating child progress.
             sub_completed = sub_completed.saturating_add(completed);
             sub_total = sub_total.saturating_add(total);
         }

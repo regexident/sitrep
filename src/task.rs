@@ -77,10 +77,18 @@ impl Task {
         self
     }
 
+    // Returns the effective completed count, clamped to not exceed the total.
+    //
+    // Regular arithmetic is safe here since we're only comparing two `usize` values,
+    // not aggregating multiple values that could overflow.
     pub(crate) fn effective_completed(&self) -> usize {
         self.completed.min(self.total)
     }
 
+    // Returns the effective total, ensuring it's at least as large as completed.
+    //
+    // Regular arithmetic is safe here since we're only comparing two `usize` values,
+    // not aggregating multiple values that could overflow.
     pub(crate) fn effective_total(&self) -> usize {
         self.completed.max(self.total)
     }
