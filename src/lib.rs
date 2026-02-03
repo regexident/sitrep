@@ -17,7 +17,7 @@ pub use self::{
     generation::Generation,
     observer::{NopObserver, StdMpscObserver},
     priority::PriorityLevel,
-    progress::{Controller, Observer, Progress, ProgressId, Reporter},
+    progress::{Controller, DetachedObserver, Observer, Progress, ProgressId, Reporter},
     report::Report,
     task::{State, Task},
 };

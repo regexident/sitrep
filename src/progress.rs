@@ -49,6 +49,26 @@ pub trait Observer: Send + Sync {
     fn observe(&self, event: Event);
 }
 
+/// A wrapper for an observer that was detached from a progress when attaching to a new parent.
+///
+/// This type explicitly represents the previous observer of a child progress that has been
+/// attached to a new parent via [`Progress::attach_child`]. The child progress now uses
+/// its parent's observer, and this wrapper contains the observer it previously used.
+pub struct DetachedObserver(Arc<dyn Observer>);
+
+impl DetachedObserver {
+    /// Consumes the wrapper and returns the inner observer.
+    pub fn into_inner(self) -> Arc<dyn Observer> {
+        self.0
+    }
+}
+
+impl AsRef<Arc<dyn Observer>> for DetachedObserver {
+    fn as_ref(&self) -> &Arc<dyn Observer> {
+        &self.0
+    }
+}
+
 /// Types for generating progress reports.
 pub trait Reporter: Send + Sync {
     /// Generates the full report for a progress.
@@ -213,7 +233,7 @@ impl Progress {
     }
 
     /// Attaches `child` to `self`, returning the `child's` own and now no longer used `Observer`.
-    pub fn attach_child(self: &Arc<Self>, child: &Arc<Self>) -> Arc<dyn Observer> {
+    pub fn attach_child(self: &Arc<Self>, child: &Arc<Self>) -> DetachedObserver {
         let child_last_change = child.atomic_state.last_change.load(Ordering::Relaxed);
         self.atomic_state
             .last_change
@@ -236,7 +256,7 @@ impl Progress {
 
         self.emit_update_event(&*self.state.read().observer, self.id);
 
-        observer
+        DetachedObserver(observer)
     }
 
     /// Detaches `child` from `self`, giving it a new `observer`.
