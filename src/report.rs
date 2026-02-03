@@ -5,7 +5,7 @@ use std::borrow::Cow;
 use crate::{generation::Generation, task::State, ProgressId};
 
 /// A progress' report.
-#[derive(Clone, PartialEq, Default, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Report {
     /// The associated progress' identifier.
     pub progress_id: ProgressId,
@@ -126,8 +126,14 @@ mod tests {
         fn prunes_self() {
             let report = Report {
                 progress_id: ProgressId::new_unique(),
+                label: None,
+                completed: 0,
+                total: 0,
+                fraction: 0.0,
+                is_indeterminate: false,
+                state: State::Running,
+                subreports: vec![],
                 last_change: Generation(0),
-                ..Default::default()
             };
 
             assert_eq!(report.to_pruned(Generation(1)), None);
@@ -141,25 +147,47 @@ mod tests {
 
             let report = Report {
                 progress_id: parent_id,
+                label: None,
+                completed: 0,
+                total: 0,
+                fraction: 0.0,
+                is_indeterminate: false,
+                state: State::Running,
                 subreports: vec![
                     Report {
                         progress_id: ProgressId::new_unique(),
+                        label: None,
+                        completed: 0,
+                        total: 0,
+                        fraction: 0.0,
+                        is_indeterminate: false,
+                        state: State::Running,
+                        subreports: vec![],
                         last_change: Generation(1),
-                        ..Default::default()
                     },
                     Report {
                         progress_id: child_id,
+                        label: None,
+                        completed: 0,
+                        total: 0,
+                        fraction: 0.0,
+                        is_indeterminate: false,
+                        state: State::Running,
                         subreports: vec![Report {
                             progress_id: grand_child_id,
+                            label: None,
+                            completed: 0,
+                            total: 0,
+                            fraction: 0.0,
+                            is_indeterminate: false,
+                            state: State::Running,
+                            subreports: vec![],
                             last_change: Generation(2),
-                            ..Default::default()
                         }],
                         last_change: Generation(2),
-                        ..Default::default()
                     },
                 ],
                 last_change: Generation(2),
-                ..Default::default()
             };
 
             let parent = report.to_pruned(Generation(2)).unwrap();

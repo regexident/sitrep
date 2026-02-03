@@ -26,12 +26,6 @@ static NEXT_ID: AtomicUsize = AtomicUsize::new(0);
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct ProgressId(pub(crate) usize);
 
-impl Default for ProgressId {
-    fn default() -> Self {
-        Self::new_unique()
-    }
-}
-
 impl ProgressId {
     pub(crate) fn new_unique() -> Self {
         Self(NEXT_ID.fetch_add(1, Ordering::Relaxed))
