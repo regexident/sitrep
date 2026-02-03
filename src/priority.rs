@@ -58,13 +58,13 @@ impl PriorityLevel {
 
         match EnvPriorityLevel::from_str(&level) {
             Ok(EnvPriorityLevel(min_level)) => Some(min_level),
-            Err(err) => panic!(
-                "{}",
-                format!(
-                    "Unrecognized value for env key {MIN_PRIORITY_LEVEL_KEY:?}: {value:?}",
-                    value = err.unknown
-                )
-            ),
+            Err(err) => {
+                eprintln!(
+                    "Warning: Unrecognized value for {MIN_PRIORITY_LEVEL_KEY:?}: {:?}. Using default.",
+                    err.unknown
+                );
+                None
+            }
         }
     }
 }

@@ -26,6 +26,7 @@ Please make sure to add your changes to the appropriate categories:
 
 - Bumped MSRV from `1.70.0` to `1.72.0`.
 - Replaced panics with `Result` returns in control methods.
+- Replaced panic with warning on invalid env variable in "src/priority.rs".
 
 ### Deprecated
 
