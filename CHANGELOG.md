@@ -39,7 +39,7 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Fixed
 
-- n/a
+- Fixed potential deadlocks on recursive calls in `Progress`'s `.pause()` method.
 
 ### Performance
 
