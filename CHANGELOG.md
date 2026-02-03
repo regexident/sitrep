@@ -35,7 +35,7 @@ Please make sure to add your changes to the appropriate categories:
 
 ### Removed
 
-- n/a
+- Removed `Default` impl from `ProgressId` to prevent surprising side effects.
 
 ### Fixed
 
