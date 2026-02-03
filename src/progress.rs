@@ -79,15 +79,30 @@ pub trait Controller: Send + Sync {
 
     /// Sets the state of the corresponding `Progress` task
     /// (and all its running sub-tasks) to `Paused`, recursively.
-    fn pause(self: &Arc<Self>);
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ControlError::NotPausable`] if the task is not pausable
+    /// (i.e., [`is_pausable()`](Self::is_pausable) returns `false`).
+    fn pause(self: &Arc<Self>) -> Result<(), crate::ControlError>;
 
     /// Sets the state of the corresponding `Progress` task
     /// (and all its paused sub-tasks) to `Running`, recursively.
-    fn resume(self: &Arc<Self>);
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ControlError::NotPausable`] if the task is not pausable
+    /// (i.e., [`is_pausable()`](Self::is_pausable) returns `false`).
+    fn resume(self: &Arc<Self>) -> Result<(), crate::ControlError>;
 
     /// Sets the state of the corresponding `Progress` task
     /// (and all its running/paused sub-tasks) to `Canceled`, recursively.
-    fn cancel(self: &Arc<Self>);
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ControlError::NotCancelable`] if the task is not cancelable
+    /// (i.e., [`is_cancelable()`](Self::is_cancelable) returns `false`).
+    fn cancel(self: &Arc<Self>) -> Result<(), crate::ControlError>;
 }
 
 /// The progress' state.
@@ -720,9 +735,9 @@ impl Controller for Progress {
         self.state.read().task.state == State::Paused
     }
 
-    fn pause(self: &Arc<Self>) {
+    fn pause(self: &Arc<Self>) -> Result<(), crate::ControlError> {
         if !self.is_pausable() {
-            panic!("not pausable");
+            return Err(crate::ControlError::NotPausable);
         }
 
         let guard = &mut self.state.write();
@@ -732,13 +747,15 @@ impl Controller for Progress {
         }
 
         for child in self.relationships.read().children.values() {
-            child.pause();
+            child.pause()?;
         }
+
+        Ok(())
     }
 
-    fn resume(self: &Arc<Self>) {
+    fn resume(self: &Arc<Self>) -> Result<(), crate::ControlError> {
         if !self.is_pausable() {
-            panic!("not resumable");
+            return Err(crate::ControlError::NotPausable);
         }
 
         let guard = &mut self.state.write();
@@ -748,13 +765,15 @@ impl Controller for Progress {
         }
 
         for child in self.relationships.read().children.values() {
-            child.resume();
+            child.resume()?;
         }
+
+        Ok(())
     }
 
-    fn cancel(self: &Arc<Self>) {
+    fn cancel(self: &Arc<Self>) -> Result<(), crate::ControlError> {
         if !self.is_cancelable() {
-            panic!("not cancelable");
+            return Err(crate::ControlError::NotCancelable);
         }
 
         let guard = &mut self.state.write();
@@ -764,8 +783,10 @@ impl Controller for Progress {
         }
 
         for child in self.relationships.read().children.values() {
-            child.cancel();
+            child.cancel()?;
         }
+
+        Ok(())
     }
 }
 
