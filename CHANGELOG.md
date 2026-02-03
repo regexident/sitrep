@@ -28,6 +28,7 @@ Please make sure to add your changes to the appropriate categories:
 - Replaced panics with `Result` returns in control methods.
 - Replaced panic with warning on invalid env variable in "src/priority.rs".
 - Wrapped `attach_child()` return value in `DetachedObserver` newtype for clarity.
+- Added `#[must_use]` attributes to getter methods in `Reporter` and `Controller`.
 
 ### Deprecated
 
