@@ -816,13 +816,24 @@ impl Controller for Progress {
             return Err(crate::ControlError::NotCancelable);
         }
 
-        let guard = &mut self.state.write();
+        {
+            let guard = &mut self.state.write();
 
-        if [State::Paused, State::Running].contains(&guard.task.state) {
-            guard.task.state = State::Canceled;
-        }
+            if [State::Paused, State::Running].contains(&guard.task.state) {
+                guard.task.state = State::Canceled;
+            }
+        } // Release write lock before recursing
 
-        for child in self.relationships.read().children.values() {
+        // Now recursively cancel children
+        let children: Vec<_> = self
+            .relationships
+            .read()
+            .children
+            .values()
+            .cloned()
+            .collect();
+
+        for child in children {
             child.cancel()?;
         }
 
