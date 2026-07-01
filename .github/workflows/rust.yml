@@ -76,8 +76,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: nightly
-      - uses: taiki-e/install-action@965241fa3fede85d6ac19ce07445c81586a29c24 # cargo-hack
-      - uses: taiki-e/install-action@0d45c605487a566515840b50d09e6524fe919b9d # cargo-minimal-versions
+      - uses: taiki-e/install-action@ba409abc1f6fef3914643144e668432429518460 # cargo-hack
+      - uses: taiki-e/install-action@8cd27a9e093cbe3433e73c6d2fc015e8947ce482 # cargo-minimal-versions
       - name: minimal-versions check
         run: cargo minimal-versions check --workspace --all-features --ignore-private -v
       - name: minimal-versions build
@@ -94,5 +94,5 @@ jobs:
       - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: nightly
-      - uses: taiki-e/install-action@965241fa3fede85d6ac19ce07445c81586a29c24 # cargo-hack
+      - uses: taiki-e/install-action@ba409abc1f6fef3914643144e668432429518460 # cargo-hack
       - run: cargo hack check --rust-version --lib --ignore-private
