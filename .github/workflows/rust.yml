@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: stable
@@ -37,12 +37,12 @@ jobs:
     name: Test Suite
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: stable
           components: rust-src
-      - uses: cargo-bins/cargo-binstall@30b5ca8b54e1dcffd9548bc87ede1531310fdc67 # v1.20.0
+      - uses: cargo-bins/cargo-binstall@ead08b90bd7b2e6d81963fb9cf0b7239f66d5db4 # v1.21.0
       - run: cargo binstall cargo-expand --no-confirm
       - run: cargo test
 
@@ -50,7 +50,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: stable
@@ -61,7 +61,7 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: stable
@@ -72,12 +72,12 @@ jobs:
     name: Compile and test with minimal versions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: nightly
-      - uses: taiki-e/install-action@965241fa3fede85d6ac19ce07445c81586a29c24 # cargo-hack
-      - uses: taiki-e/install-action@0d45c605487a566515840b50d09e6524fe919b9d # cargo-minimal-versions
+      - uses: taiki-e/install-action@2615f1caf9b10e7f7eda32bd8a45060155435a0b # cargo-hack
+      - uses: taiki-e/install-action@98ba44a3a81119a8078c50dee3119e914d607300 # cargo-minimal-versions
       - name: minimal-versions check
         run: cargo minimal-versions check --workspace --all-features --ignore-private -v
       - name: minimal-versions build
@@ -90,9 +90,9 @@ jobs:
     name: Verify minimal supported rust version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: nightly
-      - uses: taiki-e/install-action@965241fa3fede85d6ac19ce07445c81586a29c24 # cargo-hack
+      - uses: taiki-e/install-action@2615f1caf9b10e7f7eda32bd8a45060155435a0b # cargo-hack
       - run: cargo hack check --rust-version --lib --ignore-private
